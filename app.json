@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "ABC and Me",
+    "slug": "abc-and-me",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFF9F0"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.jmagdziasz.abcfamily"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#FFF9F0"
+      },
+      "package": "com.jmagdziasz.abcfamily"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-image-picker"
+    ],
+    "scheme": "abcandme",
+    "assetBundlePatterns": [
+      "assets/**/*"
+    ]
+  }
+}

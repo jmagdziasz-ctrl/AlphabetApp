@@ -1,0 +1,29 @@
+{
+  "cli": {
+    "version": ">= 19.0.0"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      }
+    },
+    "production": {
+      "autoIncrement": true
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "jmagdziasz@live.com",
+        "ascAppId": "6774189559",
+        "appleTeamId": "9HX4PD8XQH"
+      }
+    }
+  }
+}
