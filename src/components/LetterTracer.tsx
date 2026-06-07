@@ -16,6 +16,23 @@ interface Props {
 // This lets the child reposition and keep going without being cut off early.
 const FINISH_DELAY_MS = 2000;
 
+// ── Y-normalisation ────────────────────────────────────────────────────────────
+// Letter coordinates are defined on a 0-100 grid.  Most letters bottom out at
+// y≈92, which places the lowest dots right at the canvas edge — too close to
+// the iOS home-gesture area on iPhones with a notch/Dynamic Island.
+// We compress the Y axis so that y=92 (the original bottom) maps to y=83,
+// keeping the tops exactly where they are (y=8 stays y=8).  This lifts every
+// letter/number 9 units inside the canvas without touching the path data.
+const TOP_Y    = 8;   // coordinates start here
+const SRC_BOT  = 92;  // original bottom coordinate (what "B" uses)
+const DST_BOT  = 83;  // new bottom limit (lifted by 9 units)
+const Y_SCALE  = (DST_BOT - TOP_Y) / (SRC_BOT - TOP_Y); // ≈ 0.893
+
+function normY(y: number): number {
+  return TOP_Y + (y - TOP_Y) * Y_SCALE;
+}
+// ───────────────────────────────────────────────────────────────────────────────
+
 export function LetterTracer({ letter, size = 280, accentColor, onComplete, onProgress, onTouchingChange }: Props) {
   const strokes = LETTER_PATHS[letter] ?? [];
 
@@ -24,7 +41,7 @@ export function LetterTracer({ letter, size = 280, accentColor, onComplete, onPr
     stroke.map((pt, pi) => ({
       id: `${si}-${pi}`,
       x: (pt.x / 100) * size,
-      y: (pt.y / 100) * size,
+      y: (normY(pt.y) / 100) * size,
       strokeIndex: si,
       pointIndex: pi,
     }))
@@ -123,9 +140,9 @@ export function LetterTracer({ letter, size = 280, accentColor, onComplete, onPr
   const strokeLines = strokes.flatMap((stroke, si) =>
     stroke.slice(0, -1).map((pt, pi) => {
       const x1 = (pt.x / 100) * size;
-      const y1 = (pt.y / 100) * size;
+      const y1 = (normY(pt.y) / 100) * size;
       const x2 = (stroke[pi + 1].x / 100) * size;
-      const y2 = (stroke[pi + 1].y / 100) * size;
+      const y2 = (normY(stroke[pi + 1].y) / 100) * size;
       return (
         <Line
           key={`line-${si}-${pi}`}

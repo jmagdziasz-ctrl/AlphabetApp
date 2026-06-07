@@ -3,25 +3,38 @@ import {
   View,
   Text,
   TouchableOpacity,
-  ScrollView,
   StyleSheet,
   Alert,
-  Dimensions,
+  useWindowDimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ALPHABET_DATA } from '@/constants/alphabetData';
 import { useAlphabetStore, FREE_LETTERS } from '@/store/alphabetStore';
+import { STORY_TITLE } from '@/constants/storyData';
 
-const { width } = Dimensions.get('window');
 const COLS = 5;
-const BTN_SIZE = (width - 48) / COLS;
+const ROWS = Math.ceil(ALPHABET_DATA.length / COLS); // 6 rows for 26 letters
+const GAP  = 6;
 
 export default function HomeScreen() {
+  const { width, height } = useWindowDimensions();
   const router = useRouter();
   const customizations    = useAlphabetStore(s => s.customizations);
   const isPremiumUnlocked = useAlphabetStore(s => s.isPremiumUnlocked);
+  const isNumbersUnlocked = useAlphabetStore(s => s.isNumbersUnlocked);
+  const isStoryUnlocked   = useAlphabetStore(s => s.isStoryUnlocked);
   const parentPin         = useAlphabetStore(s => s.parentPin);
+
+  // Calculate button size so the whole screen fits without scrolling.
+  // Reserve space for title, subtitle, section buttons, unlock banner, setup button, and padding.
+  const hasAnyLocked  = !isPremiumUnlocked || !isNumbersUnlocked || !isStoryUnlocked;
+  const nonGridHeight = hasAnyLocked ? 230 : 185;
+  const gridHeight    = height - nonGridHeight;
+  const btnByHeight   = (gridHeight - GAP * (ROWS - 1)) / ROWS;
+  const btnByWidth    = (width - 32 - GAP * (COLS - 1)) / COLS;
+  const btnSize       = Math.floor(Math.min(btnByHeight, btnByWidth));
+  const letterFontSize = Math.max(16, Math.floor(btnSize * 0.42));
 
   const openSetup = () => {
     Alert.prompt(
@@ -49,16 +62,35 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>ABC{'\n'}and Me!</Text>
-        <Text style={styles.subtitle}>Tap a letter to start tracing</Text>
+      <View style={styles.container}>
 
-        {/* Free letters label */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionLabel}>Free — A through E</Text>
+        {/* Title */}
+        <Text style={styles.title}>ABC and Me!</Text>
+
+        {/* Section buttons */}
+        <View style={styles.sectionRow}>
+          <TouchableOpacity
+            style={[styles.sectionBtn, { backgroundColor: '#FF6B35' }]}
+            onPress={() => !isPremiumUnlocked ? router.push('/paywall') : null}
+          >
+            <Text style={styles.sectionBtnText}>🔤 {isPremiumUnlocked ? 'ABC' : '🔒 ABC'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.sectionBtn, { backgroundColor: isNumbersUnlocked ? '#4CAF50' : '#9E9E9E' }]}
+            onPress={() => isNumbersUnlocked ? router.push('/numbers') : router.push('/paywall')}
+          >
+            <Text style={styles.sectionBtnText}>🔢 {isNumbersUnlocked ? '123' : '🔒 123'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.sectionBtn, { backgroundColor: isStoryUnlocked ? '#7B1FA2' : '#9E9E9E' }]}
+            onPress={() => isStoryUnlocked ? router.push('/story') : router.push('/paywall')}
+          >
+            <Text style={styles.sectionBtnText}>📖 {isStoryUnlocked ? 'Story' : '🔒 Story'}</Text>
+          </TouchableOpacity>
         </View>
 
-        <View style={styles.grid}>
+        {/* Letter grid */}
+        <View style={[styles.grid, { gap: GAP }]}>
           {ALPHABET_DATA.map((item) => {
             const custom   = customizations[item.letter];
             const isLocked = !FREE_LETTERS.has(item.letter) && !isPremiumUnlocked;
@@ -69,6 +101,8 @@ export default function HomeScreen() {
                 style={[
                   styles.letterBtn,
                   {
+                    width:           btnSize,
+                    height:          btnSize,
                     backgroundColor: isLocked ? '#F5F5F5' : item.bgColor,
                     borderColor:     isLocked ? '#E0E0E0' : item.accentColor,
                   },
@@ -76,16 +110,10 @@ export default function HomeScreen() {
                 onPress={() => handleLetterPress(item.letter)}
                 activeOpacity={0.7}
               >
-                <Text
-                  style={[
-                    styles.letterText,
-                    { color: isLocked ? '#BDBDBD' : item.accentColor },
-                  ]}
-                >
+                <Text style={[styles.letterText, { fontSize: letterFontSize, color: isLocked ? '#BDBDBD' : item.accentColor }]}>
                   {item.letter}
                 </Text>
 
-                {/* Lock badge */}
                 {isLocked ? (
                   <View style={styles.lockBadge}>
                     <Text style={styles.lockIcon}>🔒</Text>
@@ -98,74 +126,72 @@ export default function HomeScreen() {
           })}
         </View>
 
-        {/* Unlock banner — only shown when not yet purchased */}
-        {!isPremiumUnlocked && (
-          <TouchableOpacity style={styles.unlockBanner} onPress={() => router.push('/paywall')}>
-            <Text style={styles.unlockBannerText}>🔓 Unlock All 26 Letters — $2.99</Text>
+        {/* Bottom buttons */}
+        <View style={styles.bottomRow}>
+          {!isPremiumUnlocked && (
+            <TouchableOpacity style={styles.unlockBanner} onPress={() => router.push('/paywall')}>
+              <Text style={styles.unlockBannerText}>🔓 Unlock All 26 Letters — $2.99</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity style={styles.setupBtn} onPress={openSetup}>
+            <Text style={styles.setupBtnText}>⚙️ Parent Setup</Text>
           </TouchableOpacity>
-        )}
+        </View>
 
-        <TouchableOpacity style={styles.setupBtn} onPress={openSetup}>
-          <Text style={styles.setupBtnText}>⚙️ Parent Setup</Text>
-        </TouchableOpacity>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFF9F0' },
-  container: { alignItems: 'center', paddingBottom: 40 },
-  title: {
-    fontSize: 52,
-    fontWeight: '900',
-    textAlign: 'center',
-    color: '#FF6B35',
-    marginTop: 16,
-    lineHeight: 56,
+  safe:      { flex: 1, backgroundColor: '#FFF9F0' },
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
   },
-  subtitle: { fontSize: 16, color: '#9E9E9E', marginBottom: 16, marginTop: 4 },
-
-  sectionHeader: { width: '100%', paddingHorizontal: 24, marginBottom: 8 },
-  sectionLabel:  { fontSize: 13, color: '#9E9E9E', fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase' },
+  title: {
+    fontSize: 34,
+    fontWeight: '900',
+    color: '#FF6B35',
+    marginTop: 4,
+  },
+  subtitle: { fontSize: 13, color: '#9E9E9E', marginTop: 2 },
+  sectionRow: { flexDirection: 'row', gap: 8, marginTop: 6 },
+  sectionBtn: { paddingVertical: 7, paddingHorizontal: 14, borderRadius: 20 },
+  sectionBtnText: { color: '#FFF', fontSize: 14, fontWeight: '800' },
 
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: 16,
-    gap: 8,
     justifyContent: 'center',
   },
   letterBtn: {
-    width: BTN_SIZE - 4,
-    height: BTN_SIZE - 4,
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 2.5,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
   },
-  letterText: { fontSize: 28, fontWeight: '800' },
+  letterText: { fontWeight: '800' },
   customDot: {
     position: 'absolute',
-    top: 4,
-    right: 4,
-    width: 8,
-    height: 8,
+    top: 3,
+    right: 3,
+    width: 7,
+    height: 7,
     borderRadius: 4,
   },
-  lockBadge: {
-    position: 'absolute',
-    bottom: 2,
-    right: 2,
-  },
-  lockIcon: { fontSize: 11 },
+  lockBadge: { position: 'absolute', bottom: 2, right: 2 },
+  lockIcon:  { fontSize: 10 },
 
+  bottomRow: { alignItems: 'center', gap: 8, paddingBottom: 4 },
   unlockBanner: {
-    marginTop: 20,
     backgroundColor: '#FF6B35',
-    paddingVertical: 14,
-    paddingHorizontal: 28,
+    paddingVertical: 10,
+    paddingHorizontal: 24,
     borderRadius: 50,
     shadowColor: '#FF6B35',
     shadowOffset: { width: 0, height: 3 },
@@ -173,14 +199,12 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
   },
-  unlockBannerText: { color: 'white', fontSize: 17, fontWeight: '800' },
-
+  unlockBannerText: { color: 'white', fontSize: 15, fontWeight: '800' },
   setupBtn: {
-    marginTop: 16,
     backgroundColor: '#607D8B',
-    paddingVertical: 14,
-    paddingHorizontal: 28,
+    paddingVertical: 10,
+    paddingHorizontal: 24,
     borderRadius: 50,
   },
-  setupBtnText: { color: 'white', fontSize: 18, fontWeight: '700' },
+  setupBtnText: { color: 'white', fontSize: 16, fontWeight: '700' },
 });

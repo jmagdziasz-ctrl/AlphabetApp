@@ -8,6 +8,10 @@ import {
   Animated,
   Dimensions,
 } from 'react-native';
+import * as Speech from 'expo-speech';
+import { Audio } from 'expo-av';
+
+const SUCCESS_SOUND = require('@/assets/sounds/success.wav');
 
 interface Props {
   visible: boolean;
@@ -55,8 +59,33 @@ export function FeedbackModal({ visible, success, onNext, onRetry, accentColor }
           ])
         ),
       ]).start();
+
+      // Play victory sound + speak encouragement when modal appears
+      if (success) {
+        const phrases = [
+          'Amazing job!', 'You did it!', 'Fantastic!', 'Woohoo!',
+          'Super star!', 'Incredible!', 'Way to go!',
+        ];
+        const phrase = phrases[Math.floor(Math.random() * phrases.length)];
+
+        // Play the fun level-up sound, then speak after a short delay
+        (async () => {
+          try {
+            const { sound } = await Audio.Sound.createAsync(SUCCESS_SOUND, { shouldPlay: true });
+            sound.setOnPlaybackStatusUpdate((s) => {
+              if (s.isLoaded && s.didJustFinish) sound.unloadAsync();
+            });
+          } catch {}
+          setTimeout(() => {
+            Speech.speak(phrase, { pitch: 1.6, rate: 1.0 });
+          }, 300);
+        })();
+      } else {
+        Speech.speak('Keep trying, you can do it!', { pitch: 1.3, rate: 1.0 });
+      }
     } else {
       bounceAnims.forEach(a => a.setValue(0));
+      Speech.stop();
     }
   }, [visible]);
 

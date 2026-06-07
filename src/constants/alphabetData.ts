@@ -140,7 +140,7 @@ export const ALPHABET_DATA: LetterData[] = [
     bgColor: '#E8F5E9', accentColor: '#2E7D32',
     image: require('../../assets/scenes/T-Tucker-and-Tate-Take-Turns.png'),
     facePosition:       { top: 0.46, left: 0.66, size: 63 },
-    secondFacePosition: { top: 0.18, left: 0.67 },
+    secondFacePosition: { top: 0.31, left: 0.40 },
   },
   {
     letter: 'U', defaultName: 'Uma', sentence: 'Unloads',

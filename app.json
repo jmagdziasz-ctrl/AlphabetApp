@@ -13,21 +13,36 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.jmagdziasz.abcfamily"
+      "bundleIdentifier": "com.jmagdziasz.abcfamily",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSMicrophoneUsageDescription": "ABC and Me uses the microphone so parents can record themselves reading story pages for their child."
+      },
+      "buildNumber": "23"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#FFF9F0"
       },
-      "package": "com.jmagdziasz.abcfamily"
+      "package": "com.jmagdziasz.abcfamily",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "plugins": [
       "expo-router",
-      "expo-image-picker"
+      "expo-image-picker",
+      "expo-font"
     ],
     "scheme": "abcandme",
     "assetBundlePatterns": [
       "assets/**/*"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "1b89d484-a949-420e-bed2-982b92305e71"
+      }
+    }
   }
 }

@@ -1,81 +1,169 @@
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
+  View, Text, TouchableOpacity, ScrollView,
+  StyleSheet, Alert, ActivityIndicator, Linking,
 } from 'react-native';
+
+// ── Update these URLs with your actual hosted pages ──────────────────────────
+const PRIVACY_POLICY_URL = 'https://jmagdziasz-ctrl.github.io/abc-and-me-privacy/';
+const TERMS_URL          = 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';
+// ────────────────────────────────────────────────────────────────────────────
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Purchases, { PurchasesError, PURCHASES_ERROR_CODE } from 'react-native-purchases';
 import { useAlphabetStore } from '@/store/alphabetStore';
+import { syncEntitlements } from '@/utils/syncEntitlements';
 
-const PRICE = '$2.99';
+// ── Product IDs — must match App Store Connect exactly ──────────────────────
+export const PRODUCT_IDS = {
+  alphabet: 'com.jmagdziasz.abcfamily.unlock_all',      // $2.99
+  numbers:  'com.jmagdziasz.abcfamily.numbers',          // $1.99
+  story:    'com.jmagdziasz.abcfamily.story',            // $3.99
+  bundle:   'com.jmagdziasz.abcfamily.bundle',           // $4.99
+  monthly:  'com.jmagdziasz.abcfamily.allaccess_monthly', // $4.99/month
+};
+// ────────────────────────────────────────────────────────────────────────────
 
-const UNLOCK_FEATURES = [
-  { emoji: '🔤', text: 'All 26 letters — A through Z' },
-  { emoji: '✏️', text: 'Interactive tracing for every letter' },
-  { emoji: '🖼️', text: 'Illustrated scenes for each letter' },
-  { emoji: '📷', text: 'Add family photos to every character' },
-  { emoji: '👨‍👩‍👧', text: 'Personalize names for all characters' },
-  { emoji: '🔓', text: 'One-time purchase — no subscriptions!' },
+const TIERS = [
+  {
+    id: 'numbers',
+    emoji: '🔢',
+    title: 'Numbers 1–10',
+    price: '$1.99',
+    priceNote: 'one-time',
+    desc: 'Unlock all 10 numbers with illustrated scenes, tracing practice, and custom family photo overlays.',
+    bullets: ['Numbers 1–10 with tracing', 'Custom photo for each number', 'Illustrated learning scenes'],
+    color: '#4CAF50',
+  },
+  {
+    id: 'alphabet',
+    emoji: '🔤',
+    title: 'Full Alphabet',
+    price: '$2.99',
+    priceNote: 'one-time',
+    desc: 'Unlock all 26 letters F–Z with tracing practice, illustrated scenes, and custom family photo overlays.',
+    bullets: ['Letters F–Z unlocked', 'Custom photo for each letter', 'Tracing & illustrated scenes'],
+    color: '#FF6B35',
+  },
+  {
+    id: 'story',
+    emoji: '📖',
+    title: 'Story Time',
+    price: '$3.99',
+    priceNote: 'one-time',
+    desc: 'A 15-page illustrated family story where every character can be replaced with your own family photos.',
+    bullets: ['15-page illustrated story', 'Custom family photo characters', 'Record your own voice narration'],
+    color: '#7B1FA2',
+  },
+  {
+    id: 'bundle',
+    emoji: '⭐',
+    title: 'Numbers + Story Bundle',
+    price: '$4.99',
+    priceNote: 'one-time · best value',
+    desc: 'Get both Numbers 1–10 and the full Story Book at a discount. Everything you need beyond the alphabet.',
+    bullets: ['Numbers 1–10 unlocked', '15-page story unlocked', 'Save vs. buying separately'],
+    color: '#1565C0',
+    highlight: true,
+  },
+  {
+    id: 'monthly',
+    emoji: '♾️',
+    title: 'All Access',
+    price: '$4.99',
+    priceNote: 'per month · cancel anytime',
+    desc: 'Everything unlocked — all 26 letters, all 10 numbers, and the full story book. One subscription covers it all.',
+    bullets: ['All 26 letters unlocked', 'Numbers 1–10 unlocked', '15-page story unlocked'],
+    color: '#F57F17',
+  },
 ];
 
 export default function PaywallScreen() {
   const router = useRouter();
-  const unlockPremium = useAlphabetStore(s => s.unlockPremium);
-  const [loading, setLoading] = useState(false);
+  const parentPin = useAlphabetStore(s => s.parentPin);
+  const [loadingId, setLoadingId] = useState<string | null>(null);
 
-  const handlePurchase = async () => {
-    setLoading(true);
+  const handlePurchase = async (tierId: string, productId: string) => {
+    // Require parent PIN before any purchase
+    await new Promise<void>((resolve, reject) => {
+      Alert.prompt(
+        '👋 Parent Approval Required',
+        'Enter your parent PIN to approve this purchase.',
+        [
+          { text: 'Cancel', style: 'cancel', onPress: () => reject('cancelled') },
+          {
+            text: 'Approve',
+            onPress: (pin) => {
+              if (pin === parentPin) {
+                resolve();
+              } else {
+                Alert.alert('Incorrect PIN', 'That PIN is not correct. Please try again.');
+                reject('wrong_pin');
+              }
+            },
+          },
+        ],
+        'secure-text',
+      );
+    }).catch(() => { return Promise.reject('cancelled'); });
+
+    setLoadingId(tierId);
     try {
-      const offerings = await Purchases.getOfferings();
-      const pkg = offerings.current?.availablePackages[0];
+      const offerings   = await Purchases.getOfferings();
+      const allPackages = offerings.current?.availablePackages ?? [];
+      const pkg = allPackages.find(p => p.product.identifier === productId);
+
       if (!pkg) {
-        Alert.alert('Not Available', 'Purchase is not available right now. Please try again later.');
+        Alert.alert('Not Available', 'This purchase is not available right now. Please try again later.');
         return;
       }
+
       const { customerInfo } = await Purchases.purchasePackage(pkg);
-      if (customerInfo.entitlements.active['premium']) {
-        await unlockPremium();
-        Alert.alert(
-          '🎉 Unlocked!',
-          'All 26 letters are now available. Happy learning!',
-          [{ text: "Let's Go!", onPress: () => router.replace('/') }],
-        );
-      }
+
+      // Primary: sync via RevenueCat entitlements
+      await syncEntitlements(customerInfo, useAlphabetStore.getState());
+
+      // Fallback: unlock directly by tier if entitlements aren't configured in RevenueCat yet
+      const store = useAlphabetStore.getState();
+      if (tierId === 'alphabet') await store.unlockPremium();
+      if (tierId === 'numbers')  await store.unlockNumbers();
+      if (tierId === 'story')    await store.unlockStory();
+      if (tierId === 'bundle')   { await store.unlockNumbers(); await store.unlockStory(); }
+      if (tierId === 'monthly')  await store.unlockAll();
+
+      Alert.alert('🎉 Unlocked!', 'Your new content is ready!', [
+        { text: "Let's Go!", onPress: () => router.replace('/') },
+      ]);
     } catch (e) {
+      // Silently ignore PIN cancellation / wrong PIN
+      if (e === 'cancelled' || e === 'wrong_pin') return;
       const err = e as PurchasesError;
-      // User cancelled — don't show an error
-      if (err.code !== PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) {
+      if (err?.code !== PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) {
         Alert.alert('Purchase Failed', 'Something went wrong. Please try again.');
       }
     } finally {
-      setLoading(false);
+      setLoadingId(null);
     }
   };
 
   const restorePurchase = async () => {
-    setLoading(true);
+    setLoadingId('restore');
     try {
       const customerInfo = await Purchases.restorePurchases();
-      if (customerInfo.entitlements.active['premium']) {
-        await unlockPremium();
-        Alert.alert(
-          '✅ Restored!',
-          'Your purchase has been restored.',
-          [{ text: "Let's Go!", onPress: () => router.replace('/') }],
-        );
+      const hasAny = Object.keys(customerInfo.entitlements.active).length > 0;
+      await syncEntitlements(customerInfo, useAlphabetStore.getState());
+
+      if (hasAny) {
+        Alert.alert('✅ Restored!', 'Your purchases have been restored.', [
+          { text: "Let's Go!", onPress: () => router.replace('/') },
+        ]);
       } else {
-        Alert.alert('Nothing to Restore', 'No previous purchase was found for this Apple ID.');
+        Alert.alert('Nothing to Restore', 'No previous purchases found for this Apple ID.');
       }
     } catch {
       Alert.alert('Error', 'Could not restore purchases. Please try again.');
     } finally {
-      setLoading(false);
+      setLoadingId(null);
     }
   };
 
@@ -83,138 +171,167 @@ export default function PaywallScreen() {
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
-        {/* Close / Back */}
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
           <Text style={styles.backText}>✕ Not now</Text>
         </TouchableOpacity>
 
-        {/* Hero */}
         <Text style={styles.emoji}>🌟</Text>
-        <Text style={styles.headline}>Unlock All 26 Letters!</Text>
+        <Text style={styles.headline}>Expand the Adventure!</Text>
         <Text style={styles.sub}>
-          Your child is loving ABC and Me! Keep the learning going with every letter of the alphabet.
+          Personalize every character with your family's photos. Choose the content that's right for you.
         </Text>
 
-        {/* Feature list */}
-        <View style={styles.featureBox}>
-          {UNLOCK_FEATURES.map((f) => (
-            <View key={f.text} style={styles.featureRow}>
-              <Text style={styles.featureEmoji}>{f.emoji}</Text>
-              <Text style={styles.featureText}>{f.text}</Text>
+        {TIERS.map((tier) => {
+          const productId = PRODUCT_IDS[tier.id as keyof typeof PRODUCT_IDS];
+          const isLoading = loadingId === tier.id;
+
+          return (
+            <View key={tier.id} style={[styles.tierCard, tier.highlight && styles.tierHighlight, { borderColor: tier.color }]}>
+              {tier.highlight && (
+                <View style={[styles.bestValueBadge, { backgroundColor: tier.color }]}>
+                  <Text style={styles.bestValueText}>BEST VALUE</Text>
+                </View>
+              )}
+
+              {/* Header */}
+              <View style={styles.tierHeader}>
+                <View style={[styles.tierIconBg, { backgroundColor: tier.color + '22' }]}>
+                  <Text style={styles.tierEmoji}>{tier.emoji}</Text>
+                </View>
+                <View style={styles.tierInfo}>
+                  <Text style={styles.tierTitle}>{tier.title}</Text>
+                  <View style={styles.priceRow}>
+                    <Text style={[styles.tierPrice, { color: tier.color }]}>{tier.price}</Text>
+                    <Text style={styles.priceNote}> · {tier.priceNote}</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Description */}
+              <Text style={styles.tierDesc}>{tier.desc}</Text>
+
+              {/* Bullets */}
+              <View style={styles.bulletList}>
+                {tier.bullets.map((b, i) => (
+                  <View key={i} style={styles.bulletRow}>
+                    <Text style={[styles.bulletDot, { color: tier.color }]}>✓</Text>
+                    <Text style={styles.bulletText}>{b}</Text>
+                  </View>
+                ))}
+              </View>
+
+              {/* Buy button */}
+              <TouchableOpacity
+                style={[styles.buyBtn, { backgroundColor: tier.color }, isLoading && styles.buyBtnDisabled]}
+                onPress={() => handlePurchase(tier.id, productId)}
+                disabled={!!loadingId}
+                activeOpacity={0.85}
+              >
+                {isLoading
+                  ? <ActivityIndicator color="#FFF" />
+                  : <Text style={styles.buyBtnText}>Get {tier.title} — {tier.price}</Text>
+                }
+              </TouchableOpacity>
             </View>
-          ))}
-        </View>
+          );
+        })}
 
-        {/* Price callout */}
-        <View style={styles.priceBox}>
-          <Text style={styles.priceLabel}>One-time unlock</Text>
-          <Text style={styles.price}>{PRICE}</Text>
-          <Text style={styles.priceNote}>No subscription. Yours forever.</Text>
-        </View>
-
-        {/* CTA */}
-        <TouchableOpacity
-          style={[styles.unlockBtn, loading && styles.unlockBtnDisabled]}
-          onPress={handlePurchase}
-          disabled={loading}
-          activeOpacity={0.85}
-        >
-          {loading ? (
-            <ActivityIndicator color="#FFF" />
-          ) : (
-            <Text style={styles.unlockBtnText}>Unlock All Letters — {PRICE}</Text>
-          )}
+        <TouchableOpacity onPress={restorePurchase} disabled={!!loadingId} style={styles.restoreBtn}>
+          {loadingId === 'restore'
+            ? <ActivityIndicator color="#9E9E9E" />
+            : <Text style={styles.restoreText}>Restore Previous Purchases</Text>
+          }
         </TouchableOpacity>
 
-        {/* Restore */}
-        <TouchableOpacity onPress={restorePurchase} disabled={loading} style={styles.restoreBtn}>
-          <Text style={styles.restoreText}>Restore Previous Purchase</Text>
-        </TouchableOpacity>
+        {/* Subscription disclosure — required by App Store for auto-renewable subscriptions */}
+        <View style={styles.disclosureBox}>
+          <Text style={styles.disclosureTitle}>All Access Subscription</Text>
+          <Text style={styles.disclosureBody}>
+            • $4.99 / month{'\n'}
+            • Renews automatically each month{'\n'}
+            • Cancel anytime in App Store Settings{'\n'}
+            • Payment charged to Apple ID at confirmation{'\n'}
+            • Cancellation takes effect at end of billing period
+          </Text>
+          <View style={styles.linkRow}>
+            <TouchableOpacity onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}>
+              <Text style={styles.linkText}>Privacy Policy</Text>
+            </TouchableOpacity>
+            <Text style={styles.linkSep}> · </Text>
+            <TouchableOpacity onPress={() => Linking.openURL(TERMS_URL)}>
+              <Text style={styles.linkText}>Terms of Use</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
 
         <Text style={styles.legal}>
-          Payment will be charged to your Apple ID account. The purchase is non-refundable.
+          Payments are charged to your Apple ID at confirmation. One-time purchases never expire.
+          All Access subscription renews monthly at $4.99 unless cancelled at least 24 hours before renewal.
+          Manage subscriptions in App Store settings.
         </Text>
+
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFF9F0' },
-  scroll: { alignItems: 'center', paddingHorizontal: 24, paddingBottom: 48 },
+  safe:   { flex: 1, backgroundColor: '#FFF9F0' },
+  scroll: { alignItems: 'center', paddingHorizontal: 20, paddingBottom: 48 },
 
-  backBtn: { alignSelf: 'flex-start', paddingVertical: 12, marginTop: 4 },
+  backBtn:  { alignSelf: 'flex-start', paddingVertical: 12, marginTop: 4 },
   backText: { fontSize: 15, color: '#9E9E9E', fontWeight: '600' },
 
-  emoji: { fontSize: 64, marginTop: 8 },
-  headline: {
-    fontSize: 30,
-    fontWeight: '900',
-    color: '#FF6B35',
-    textAlign: 'center',
-    marginTop: 8,
-  },
-  sub: {
-    fontSize: 16,
-    color: '#607D8B',
-    textAlign: 'center',
-    marginTop: 10,
-    lineHeight: 23,
-  },
+  emoji:    { fontSize: 56, marginTop: 4 },
+  headline: { fontSize: 28, fontWeight: '900', color: '#FF6B35', textAlign: 'center', marginTop: 8 },
+  sub:      { fontSize: 15, color: '#607D8B', textAlign: 'center', marginTop: 8, lineHeight: 22, marginBottom: 24 },
 
-  featureBox: {
-    width: '100%',
-    backgroundColor: '#FFF',
-    borderRadius: 18,
-    padding: 20,
-    marginTop: 28,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.07,
-    shadowRadius: 8,
-    elevation: 3,
+  tierCard: {
+    width: '100%', backgroundColor: '#FFF',
+    borderRadius: 20, borderWidth: 2,
+    padding: 18, marginBottom: 16,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.09, shadowRadius: 10, elevation: 4,
+    position: 'relative', overflow: 'visible',
   },
-  featureRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
-  featureEmoji: { fontSize: 22, width: 36 },
-  featureText: { fontSize: 16, color: '#37474F', fontWeight: '600', flex: 1 },
-
-  priceBox: {
-    marginTop: 24,
-    alignItems: 'center',
-    backgroundColor: '#E8F5E9',
-    borderRadius: 16,
-    paddingVertical: 18,
-    paddingHorizontal: 40,
-    width: '100%',
+  tierHighlight: { borderWidth: 3 },
+  bestValueBadge: {
+    position: 'absolute', top: -13, right: 18,
+    paddingHorizontal: 14, paddingVertical: 5, borderRadius: 20,
   },
-  priceLabel: { fontSize: 13, color: '#4CAF50', fontWeight: '700', letterSpacing: 1.2, textTransform: 'uppercase' },
-  price: { fontSize: 48, fontWeight: '900', color: '#2E7D32', marginVertical: 4 },
-  priceNote: { fontSize: 14, color: '#66BB6A', fontWeight: '600' },
+  bestValueText: { color: '#FFF', fontSize: 11, fontWeight: '900', letterSpacing: 1 },
 
-  unlockBtn: {
-    backgroundColor: '#FF6B35',
-    width: '100%',
-    paddingVertical: 18,
-    borderRadius: 50,
-    alignItems: 'center',
-    marginTop: 24,
-    shadowColor: '#FF6B35',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
-    elevation: 6,
-  },
-  unlockBtnDisabled: { opacity: 0.7 },
-  unlockBtnText: { color: '#FFF', fontSize: 18, fontWeight: '900' },
+  tierHeader:  { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+  tierIconBg:  { width: 52, height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
+  tierEmoji:   { fontSize: 28 },
+  tierInfo:    { flex: 1 },
+  tierTitle:   { fontSize: 18, fontWeight: '800', color: '#37474F' },
+  priceRow:    { flexDirection: 'row', alignItems: 'baseline', marginTop: 2 },
+  tierPrice:   { fontSize: 17, fontWeight: '800' },
+  priceNote:   { fontSize: 12, color: '#9E9E9E', fontWeight: '500' },
 
-  restoreBtn: { marginTop: 16, padding: 8 },
+  tierDesc: { fontSize: 14, color: '#607D8B', lineHeight: 20, marginBottom: 12 },
+
+  bulletList: { marginBottom: 16, gap: 6 },
+  bulletRow:  { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  bulletDot:  { fontSize: 14, fontWeight: '900', lineHeight: 20 },
+  bulletText: { fontSize: 14, color: '#455A64', lineHeight: 20, flex: 1 },
+
+  buyBtn:         { paddingVertical: 14, borderRadius: 50, alignItems: 'center' },
+  buyBtnDisabled: { opacity: 0.6 },
+  buyBtnText:     { color: '#FFF', fontSize: 15, fontWeight: '800' },
+
+  restoreBtn:  { marginTop: 8, padding: 12 },
   restoreText: { fontSize: 14, color: '#90A4AE', fontWeight: '600', textDecorationLine: 'underline' },
+  legal:       { fontSize: 11, color: '#BDBDBD', textAlign: 'center', marginTop: 16, lineHeight: 17, paddingHorizontal: 8 },
 
-  legal: {
-    fontSize: 11,
-    color: '#BDBDBD',
-    textAlign: 'center',
-    marginTop: 20,
-    lineHeight: 16,
+  disclosureBox: {
+    width: '100%', backgroundColor: '#F5F5F5', borderRadius: 12,
+    padding: 14, marginTop: 16,
   },
+  disclosureTitle: { fontSize: 13, fontWeight: '700', color: '#455A64', marginBottom: 6 },
+  disclosureBody:  { fontSize: 12, color: '#607D8B', lineHeight: 20 },
+  linkRow:   { flexDirection: 'row', marginTop: 10, alignItems: 'center' },
+  linkText:  { fontSize: 12, color: '#1565C0', textDecorationLine: 'underline', fontWeight: '600' },
+  linkSep:   { fontSize: 12, color: '#9E9E9E' },
 });
