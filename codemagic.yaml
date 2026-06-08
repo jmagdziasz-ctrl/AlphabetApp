@@ -3,33 +3,50 @@ workflows:
     name: iOS App Store Release
     max_build_duration: 120
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.jmagdziasz.abcfamily
+      groups:
+        - app_store_credentials
       node: v20
       xcode: latest
       cocoapods: default
-      groups:
-        - app_store_credentials
       vars:
         XCODE_WORKSPACE: "ios/ABCandMe.xcworkspace"
         XCODE_SCHEME: "ABCandMe"
+        BUNDLE_ID: "com.jmagdziasz.abcfamily"
     scripts:
+      - name: Set up keychain
+        script: keychain initialize
+
+      - name: Fetch signing certificate and provisioning profile
+        script: |
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
+
+      - name: Add certificates to keychain
+        script: keychain add-certificates
+
+      - name: Apply provisioning profiles to Xcode project
+        script: xcode-project use-profiles
+
       - name: Install npm dependencies
         script: npm ci
+
       - name: Install CocoaPods
         script: |
           cd ios
           pod install
+
       - name: Build IPA for App Store
         script: |
           xcode-project build-ipa \
             --workspace "$XCODE_WORKSPACE" \
             --scheme "$XCODE_SCHEME" \
             --config "Release"
+
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
+
     publishing:
       app_store_connect:
         api_key: $APP_STORE_CONNECT_PRIVATE_KEY
