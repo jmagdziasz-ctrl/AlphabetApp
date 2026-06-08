@@ -9,6 +9,8 @@ workflows:
       node: v20
       xcode: latest
       cocoapods: default
+      groups:
+        - app_store_credentials
       vars:
         XCODE_WORKSPACE: "ios/ABCandMe.xcworkspace"
         XCODE_SCHEME: "ABCandMe"
