@@ -10,6 +10,24 @@ import * as Speech from 'expo-speech';
 import { STORY_DATA, STORY_CHARACTERS } from '@/constants/storyData';
 import { useAlphabetStore } from '@/store/alphabetStore';
 
+// Bundled narrator recordings — used when no parent recording exists for a page
+const BUNDLED_AUDIO: Record<number, number> = {
+  1:  require('@/assets/sounds/page1.mp3'),
+  2:  require('@/assets/sounds/page2.mp3'),
+  3:  require('@/assets/sounds/page3.mp3'),
+  4:  require('@/assets/sounds/page4.mp3'),
+  5:  require('@/assets/sounds/page5.mp3'),
+  6:  require('@/assets/sounds/page6.mp3'),
+  7:  require('@/assets/sounds/page7.mp3'),
+  8:  require('@/assets/sounds/page8.mp3'),
+  9:  require('@/assets/sounds/page9.mp3'),
+  10: require('@/assets/sounds/page10.mp3'),
+  11: require('@/assets/sounds/page11.mp3'),
+  12: require('@/assets/sounds/page12.mp3'),
+  13: require('@/assets/sounds/page13.mp3'),
+  14: require('@/assets/sounds/page14.mp3'),
+};
+
 export default function StoryPageScreen() {
   const { page } = useLocalSearchParams<{ page: string }>();
   const router = useRouter();
@@ -29,10 +47,11 @@ export default function StoryPageScreen() {
   const [loading,       setLoading]       = useState(false);
   const [activeWordIdx, setActiveWordIdx] = useState<number>(-1);
 
-  // Use pageNum as string key to be safe with JSON-serialised store
-  const audioUri = storyAudioUris[pageNum] ?? storyAudioUris[String(pageNum) as any];
-  const words    = (pageData?.text ?? '').split(/\s+/).filter(Boolean);
-  const hasText  = words.length > 0;
+  // Parent recording takes priority; fall back to bundled narrator MP3
+  const audioUri    = storyAudioUris[pageNum] ?? storyAudioUris[String(pageNum) as any];
+  const bundledAudio = BUNDLED_AUDIO[pageNum];
+  const words       = (pageData?.text ?? '').split(/\s+/).filter(Boolean);
+  const hasText     = words.length > 0;
 
   // ── Clean up everything when page changes or unmounts ──────────────────
   useEffect(() => {
@@ -68,15 +87,14 @@ export default function StoryPageScreen() {
     clearHighlight();
   };
 
-  // ── Recorded audio playback ─────────────────────────────────────────────
-  const playAudio = async () => {
-    if (!audioUri) return;
+  // ── Audio playback — parent recording or bundled narrator MP3 ───────────
+  const playAudio = async (source: { uri: string } | number) => {
     try {
       setLoading(true);
       await stopAll();
       await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
       const { sound } = await Audio.Sound.createAsync(
-        { uri: audioUri },
+        typeof source === 'number' ? source : { uri: source.uri },
         { shouldPlay: true },
       );
       soundRef.current = sound;
@@ -282,11 +300,13 @@ export default function StoryPageScreen() {
             <Text style={styles.navBtnText}>‹</Text>
           </TouchableOpacity>
 
-          {audioUri ? (
-            /* ── Recorded audio button ── */
+          {audioUri || bundledAudio ? (
+            /* ── Recorded or bundled audio ── */
             <TouchableOpacity
               style={styles.playBtn}
-              onPress={playing ? () => { soundRef.current?.stopAsync().catch(() => {}); setPlaying(false); clearHighlight(); } : playAudio}
+              onPress={playing
+                ? () => { soundRef.current?.stopAsync().catch(() => {}); setPlaying(false); clearHighlight(); }
+                : () => playAudio(audioUri ? { uri: audioUri } : bundledAudio!)}
               disabled={loading}
               activeOpacity={0.85}
             >
@@ -296,7 +316,7 @@ export default function StoryPageScreen() {
               }
             </TouchableOpacity>
           ) : hasText ? (
-            /* ── TTS button (no recording, but text exists) ── */
+            /* ── TTS fallback (no audio at all) ── */
             <TouchableOpacity
               style={styles.ttsBtn}
               onPress={ttsPlaying ? stopTTS : playTTS}
@@ -305,7 +325,6 @@ export default function StoryPageScreen() {
               <Text style={styles.playBtnText}>{ttsPlaying ? '⏹' : '🔊'}</Text>
             </TouchableOpacity>
           ) : (
-            /* ── No audio at all ── */
             <View style={styles.playBtnPlaceholder} />
           )}
 
