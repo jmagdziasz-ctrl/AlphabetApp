@@ -1,0 +1,437 @@
+[
+  {
+    "word": "Knock,",
+    "start": 0.0,
+    "end": 0.3
+  },
+  {
+    "word": "knock!",
+    "start": 0.6,
+    "end": 0.82
+  },
+  {
+    "word": "It",
+    "start": 1.6,
+    "end": 1.94
+  },
+  {
+    "word": "was",
+    "start": 1.94,
+    "end": 2.08
+  },
+  {
+    "word": "Mr.",
+    "start": 2.08,
+    "end": 2.34
+  },
+  {
+    "word": "Henderson",
+    "start": 2.44,
+    "end": 2.7
+  },
+  {
+    "word": "from",
+    "start": 2.7,
+    "end": 3.06
+  },
+  {
+    "word": "next",
+    "start": 3.06,
+    "end": 3.26
+  },
+  {
+    "word": "door.",
+    "start": 3.26,
+    "end": 3.58
+  },
+  {
+    "word": "He",
+    "start": 4.12,
+    "end": 4.22
+  },
+  {
+    "word": "was",
+    "start": 4.22,
+    "end": 4.38
+  },
+  {
+    "word": "very",
+    "start": 4.38,
+    "end": 4.64
+  },
+  {
+    "word": "kind.",
+    "start": 4.64,
+    "end": 5.02
+  },
+  {
+    "word": "I",
+    "start": 5.82,
+    "end": 6.02
+  },
+  {
+    "word": "heard",
+    "start": 6.02,
+    "end": 6.36
+  },
+  {
+    "word": "a",
+    "start": 6.36,
+    "end": 6.52
+  },
+  {
+    "word": "bang,",
+    "start": 6.52,
+    "end": 6.82
+  },
+  {
+    "word": "he",
+    "start": 7.08,
+    "end": 7.34
+  },
+  {
+    "word": "said.",
+    "start": 7.34,
+    "end": 7.6
+  },
+  {
+    "word": "Is",
+    "start": 8.42,
+    "end": 8.52
+  },
+  {
+    "word": "everyone",
+    "start": 8.52,
+    "end": 9.02
+  },
+  {
+    "word": "all?",
+    "start": 9.02,
+    "end": 9.44
+  },
+  {
+    "word": "He",
+    "start": 10.04,
+    "end": 10.16
+  },
+  {
+    "word": "looked",
+    "start": 10.16,
+    "end": 10.34
+  },
+  {
+    "word": "at",
+    "start": 10.34,
+    "end": 10.52
+  },
+  {
+    "word": "the",
+    "start": 10.52,
+    "end": 10.62
+  },
+  {
+    "word": "flower",
+    "start": 10.62,
+    "end": 10.9
+  },
+  {
+    "word": "-covered",
+    "start": 10.9,
+    "end": 11.32
+  },
+  {
+    "word": "kitchen.",
+    "start": 11.32,
+    "end": 11.56
+  },
+  {
+    "word": "He",
+    "start": 12.42,
+    "end": 12.64
+  },
+  {
+    "word": "looked",
+    "start": 12.64,
+    "end": 12.86
+  },
+  {
+    "word": "at",
+    "start": 12.86,
+    "end": 13.04
+  },
+  {
+    "word": "the",
+    "start": 13.04,
+    "end": 13.14
+  },
+  {
+    "word": "flower",
+    "start": 13.14,
+    "end": 13.38
+  },
+  {
+    "word": "-covered",
+    "start": 13.38,
+    "end": 13.8
+  },
+  {
+    "word": "family.",
+    "start": 13.8,
+    "end": 14.18
+  },
+  {
+    "word": "He",
+    "start": 14.9,
+    "end": 15.1
+  },
+  {
+    "word": "looked",
+    "start": 15.1,
+    "end": 15.3
+  },
+  {
+    "word": "at",
+    "start": 15.3,
+    "end": 15.52
+  },
+  {
+    "word": "waffles,",
+    "start": 15.52,
+    "end": 15.96
+  },
+  {
+    "word": "who",
+    "start": 16.5,
+    "end": 16.78
+  },
+  {
+    "word": "now",
+    "start": 16.78,
+    "end": 17.0
+  },
+  {
+    "word": "looked",
+    "start": 17.0,
+    "end": 17.42
+  },
+  {
+    "word": "like",
+    "start": 17.42,
+    "end": 17.74
+  },
+  {
+    "word": "a",
+    "start": 17.74,
+    "end": 17.88
+  },
+  {
+    "word": "tiny",
+    "start": 17.88,
+    "end": 18.28
+  },
+  {
+    "word": "white",
+    "start": 18.28,
+    "end": 18.66
+  },
+  {
+    "word": "polar",
+    "start": 18.66,
+    "end": 19.04
+  },
+  {
+    "word": "bear.",
+    "start": 19.04,
+    "end": 19.36
+  },
+  {
+    "word": "Well,",
+    "start": 19.94,
+    "end": 20.46
+  },
+  {
+    "word": "said",
+    "start": 21.0,
+    "end": 21.36
+  },
+  {
+    "word": "Mr.",
+    "start": 21.36,
+    "end": 21.62
+  },
+  {
+    "word": "Henderson",
+    "start": 21.84,
+    "end": 22.18
+  },
+  {
+    "word": "slowly.",
+    "start": 22.18,
+    "end": 22.62
+  },
+  {
+    "word": "I",
+    "start": 23.28,
+    "end": 23.44
+  },
+  {
+    "word": "see",
+    "start": 23.44,
+    "end": 23.7
+  },
+  {
+    "word": "you",
+    "start": 23.7,
+    "end": 23.88
+  },
+  {
+    "word": "need",
+    "start": 23.88,
+    "end": 24.08
+  },
+  {
+    "word": "eggs.",
+    "start": 24.08,
+    "end": 24.6
+  },
+  {
+    "word": "He",
+    "start": 25.28,
+    "end": 25.52
+  },
+  {
+    "word": "went",
+    "start": 25.52,
+    "end": 25.7
+  },
+  {
+    "word": "back",
+    "start": 25.7,
+    "end": 25.92
+  },
+  {
+    "word": "to",
+    "start": 25.92,
+    "end": 26.12
+  },
+  {
+    "word": "his",
+    "start": 26.12,
+    "end": 26.26
+  },
+  {
+    "word": "house",
+    "start": 26.26,
+    "end": 26.52
+  },
+  {
+    "word": "and",
+    "start": 26.52,
+    "end": 26.86
+  },
+  {
+    "word": "returned",
+    "start": 26.86,
+    "end": 27.2
+  },
+  {
+    "word": "with",
+    "start": 27.2,
+    "end": 27.58
+  },
+  {
+    "word": "a",
+    "start": 27.58,
+    "end": 27.72
+  },
+  {
+    "word": "whole",
+    "start": 27.72,
+    "end": 27.96
+  },
+  {
+    "word": "carton.",
+    "start": 27.96,
+    "end": 28.58
+  },
+  {
+    "word": "I",
+    "start": 29.18,
+    "end": 29.46
+  },
+  {
+    "word": "was",
+    "start": 29.46,
+    "end": 29.64
+  },
+  {
+    "word": "a",
+    "start": 29.64,
+    "end": 29.76
+  },
+  {
+    "word": "chef",
+    "start": 29.76,
+    "end": 29.94
+  },
+  {
+    "word": "once,",
+    "start": 29.94,
+    "end": 30.36
+  },
+  {
+    "word": "he",
+    "start": 30.82,
+    "end": 30.94
+  },
+  {
+    "word": "said",
+    "start": 30.94,
+    "end": 31.16
+  },
+  {
+    "word": "with",
+    "start": 31.16,
+    "end": 31.32
+  },
+  {
+    "word": "a",
+    "start": 31.32,
+    "end": 31.44
+  },
+  {
+    "word": "wink.",
+    "start": 31.44,
+    "end": 31.64
+  },
+  {
+    "word": "I",
+    "start": 32.38,
+    "end": 32.54
+  },
+  {
+    "word": "know",
+    "start": 32.54,
+    "end": 32.8
+  },
+  {
+    "word": "a",
+    "start": 32.8,
+    "end": 32.98
+  },
+  {
+    "word": "thing",
+    "start": 32.98,
+    "end": 33.16
+  },
+  {
+    "word": "or",
+    "start": 33.16,
+    "end": 33.28
+  },
+  {
+    "word": "two.",
+    "start": 33.28,
+    "end": 33.52
+  }
+]

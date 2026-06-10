@@ -1,0 +1,317 @@
+[
+  {
+    "word": "Ring,",
+    "start": 0.0,
+    "end": 0.3
+  },
+  {
+    "word": "ring!",
+    "start": 0.5,
+    "end": 0.64
+  },
+  {
+    "word": "The",
+    "start": 1.46,
+    "end": 1.56
+  },
+  {
+    "word": "phone",
+    "start": 1.56,
+    "end": 1.82
+  },
+  {
+    "word": "rang.",
+    "start": 1.82,
+    "end": 2.08
+  },
+  {
+    "word": "It",
+    "start": 2.64,
+    "end": 2.74
+  },
+  {
+    "word": "was",
+    "start": 2.74,
+    "end": 2.94
+  },
+  {
+    "word": "Granny",
+    "start": 2.94,
+    "end": 3.2
+  },
+  {
+    "word": "Rose",
+    "start": 3.2,
+    "end": 3.48
+  },
+  {
+    "word": "calling",
+    "start": 3.48,
+    "end": 4.16
+  },
+  {
+    "word": "to",
+    "start": 4.16,
+    "end": 4.4
+  },
+  {
+    "word": "say",
+    "start": 4.4,
+    "end": 4.58
+  },
+  {
+    "word": "good",
+    "start": 4.58,
+    "end": 4.8
+  },
+  {
+    "word": "morning.",
+    "start": 4.8,
+    "end": 5.16
+  },
+  {
+    "word": "We",
+    "start": 5.72,
+    "end": 5.84
+  },
+  {
+    "word": "are",
+    "start": 5.84,
+    "end": 5.96
+  },
+  {
+    "word": "making",
+    "start": 5.96,
+    "end": 6.24
+  },
+  {
+    "word": "pancakes,",
+    "start": 6.24,
+    "end": 6.74
+  },
+  {
+    "word": "Granny,\"",
+    "start": 7.02,
+    "end": 7.82
+  },
+  {
+    "word": "said",
+    "start": 7.82,
+    "end": 7.98
+  },
+  {
+    "word": "Benny.",
+    "start": 7.98,
+    "end": 8.26
+  },
+  {
+    "word": "Oh,",
+    "start": 8.9,
+    "end": 9.14
+  },
+  {
+    "word": "my",
+    "start": 9.28,
+    "end": 9.36
+  },
+  {
+    "word": "goodness!",
+    "start": 9.36,
+    "end": 9.8
+  },
+  {
+    "word": "Do",
+    "start": 10.54,
+    "end": 10.64
+  },
+  {
+    "word": "you",
+    "start": 10.64,
+    "end": 10.76
+  },
+  {
+    "word": "have",
+    "start": 10.76,
+    "end": 10.94
+  },
+  {
+    "word": "the",
+    "start": 10.94,
+    "end": 11.1
+  },
+  {
+    "word": "recipe?\"",
+    "start": 11.1,
+    "end": 12.18
+  },
+  {
+    "word": "asked",
+    "start": 12.18,
+    "end": 12.36
+  },
+  {
+    "word": "Granny.",
+    "start": 12.36,
+    "end": 12.72
+  },
+  {
+    "word": "There",
+    "start": 13.42,
+    "end": 13.52
+  },
+  {
+    "word": "was",
+    "start": 13.52,
+    "end": 13.64
+  },
+  {
+    "word": "a",
+    "start": 13.64,
+    "end": 13.76
+  },
+  {
+    "word": "long",
+    "start": 13.76,
+    "end": 14.0
+  },
+  {
+    "word": "silence.",
+    "start": 14.0,
+    "end": 14.52
+  },
+  {
+    "word": "What",
+    "start": 15.3,
+    "end": 15.6
+  },
+  {
+    "word": "is",
+    "start": 15.6,
+    "end": 15.76
+  },
+  {
+    "word": "a",
+    "start": 15.76,
+    "end": 15.84
+  },
+  {
+    "word": "recipe?",
+    "start": 15.84,
+    "end": 16.36
+  },
+  {
+    "word": "Benny",
+    "start": 17.1,
+    "end": 17.32
+  },
+  {
+    "word": "whispered",
+    "start": 17.32,
+    "end": 17.82
+  },
+  {
+    "word": "to",
+    "start": 17.82,
+    "end": 17.88
+  },
+  {
+    "word": "Zara.",
+    "start": 17.88,
+    "end": 18.22
+  },
+  {
+    "word": "Zara",
+    "start": 18.84,
+    "end": 19.2
+  },
+  {
+    "word": "shrugged.",
+    "start": 19.2,
+    "end": 19.76
+  },
+  {
+    "word": "Granny",
+    "start": 20.38,
+    "end": 20.66
+  },
+  {
+    "word": "laughed",
+    "start": 20.66,
+    "end": 20.9
+  },
+  {
+    "word": "so",
+    "start": 20.9,
+    "end": 21.28
+  },
+  {
+    "word": "hard",
+    "start": 21.28,
+    "end": 21.7
+  },
+  {
+    "word": "she",
+    "start": 21.7,
+    "end": 22.0
+  },
+  {
+    "word": "snorted.",
+    "start": 22.0,
+    "end": 22.44
+  },
+  {
+    "word": "Then",
+    "start": 23.24,
+    "end": 23.46
+  },
+  {
+    "word": "she",
+    "start": 23.46,
+    "end": 23.66
+  },
+  {
+    "word": "read",
+    "start": 23.66,
+    "end": 23.84
+  },
+  {
+    "word": "them",
+    "start": 23.84,
+    "end": 23.98
+  },
+  {
+    "word": "the",
+    "start": 23.98,
+    "end": 24.1
+  },
+  {
+    "word": "recipe",
+    "start": 24.1,
+    "end": 24.52
+  },
+  {
+    "word": "one",
+    "start": 24.52,
+    "end": 25.06
+  },
+  {
+    "word": "step",
+    "start": 25.06,
+    "end": 25.4
+  },
+  {
+    "word": "at",
+    "start": 25.4,
+    "end": 25.54
+  },
+  {
+    "word": "a",
+    "start": 25.54,
+    "end": 25.64
+  },
+  {
+    "word": "time.",
+    "start": 25.64,
+    "end": 25.96
+  }
+]

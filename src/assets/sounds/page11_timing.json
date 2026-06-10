@@ -1,0 +1,367 @@
+[
+  {
+    "word": "They",
+    "start": 0.0,
+    "end": 0.3
+  },
+  {
+    "word": "carried",
+    "start": 0.3,
+    "end": 0.68
+  },
+  {
+    "word": "the",
+    "start": 0.68,
+    "end": 0.88
+  },
+  {
+    "word": "big",
+    "start": 0.88,
+    "end": 1.22
+  },
+  {
+    "word": "plate",
+    "start": 1.22,
+    "end": 1.44
+  },
+  {
+    "word": "of",
+    "start": 1.44,
+    "end": 1.62
+  },
+  {
+    "word": "pancakes",
+    "start": 1.62,
+    "end": 2.04
+  },
+  {
+    "word": "to",
+    "start": 2.04,
+    "end": 2.46
+  },
+  {
+    "word": "the",
+    "start": 2.46,
+    "end": 2.62
+  },
+  {
+    "word": "table.",
+    "start": 2.62,
+    "end": 3.06
+  },
+  {
+    "word": "There",
+    "start": 3.82,
+    "end": 3.94
+  },
+  {
+    "word": "were",
+    "start": 3.94,
+    "end": 4.04
+  },
+  {
+    "word": "23",
+    "start": 4.04,
+    "end": 4.64
+  },
+  {
+    "word": "pancakes",
+    "start": 4.64,
+    "end": 5.46
+  },
+  {
+    "word": "in",
+    "start": 5.46,
+    "end": 5.9
+  },
+  {
+    "word": "all.",
+    "start": 5.9,
+    "end": 6.32
+  },
+  {
+    "word": "In",
+    "start": 6.82,
+    "end": 7.04
+  },
+  {
+    "word": "every",
+    "start": 7.04,
+    "end": 7.5
+  },
+  {
+    "word": "shape",
+    "start": 7.5,
+    "end": 7.74
+  },
+  {
+    "word": "you",
+    "start": 7.74,
+    "end": 7.92
+  },
+  {
+    "word": "can",
+    "start": 7.92,
+    "end": 8.1
+  },
+  {
+    "word": "imagine,",
+    "start": 8.1,
+    "end": 8.58
+  },
+  {
+    "word": "Daddy",
+    "start": 9.26,
+    "end": 9.44
+  },
+  {
+    "word": "poured",
+    "start": 9.44,
+    "end": 9.68
+  },
+  {
+    "word": "the",
+    "start": 9.68,
+    "end": 9.88
+  },
+  {
+    "word": "maple",
+    "start": 9.88,
+    "end": 10.1
+  },
+  {
+    "word": "syrup.",
+    "start": 10.1,
+    "end": 10.5
+  },
+  {
+    "word": "Mama",
+    "start": 11.18,
+    "end": 11.36
+  },
+  {
+    "word": "sliced",
+    "start": 11.36,
+    "end": 11.64
+  },
+  {
+    "word": "the",
+    "start": 11.64,
+    "end": 11.88
+  },
+  {
+    "word": "strawberries.",
+    "start": 11.88,
+    "end": 12.36
+  },
+  {
+    "word": "Zara",
+    "start": 13.32,
+    "end": 13.56
+  },
+  {
+    "word": "made",
+    "start": 13.56,
+    "end": 13.78
+  },
+  {
+    "word": "a",
+    "start": 13.78,
+    "end": 13.92
+  },
+  {
+    "word": "syrup",
+    "start": 13.92,
+    "end": 14.22
+  },
+  {
+    "word": "smiley",
+    "start": 14.22,
+    "end": 14.84
+  },
+  {
+    "word": "face",
+    "start": 14.84,
+    "end": 15.12
+  },
+  {
+    "word": "on",
+    "start": 15.12,
+    "end": 15.42
+  },
+  {
+    "word": "her",
+    "start": 15.42,
+    "end": 15.54
+  },
+  {
+    "word": "pancake.",
+    "start": 15.54,
+    "end": 15.96
+  },
+  {
+    "word": "Mr.",
+    "start": 16.84,
+    "end": 17.04
+  },
+  {
+    "word": "Henderson",
+    "start": 17.14,
+    "end": 17.48
+  },
+  {
+    "word": "ate",
+    "start": 17.48,
+    "end": 17.76
+  },
+  {
+    "word": "three",
+    "start": 17.76,
+    "end": 18.16
+  },
+  {
+    "word": "and",
+    "start": 18.16,
+    "end": 19.12
+  },
+  {
+    "word": "said",
+    "start": 19.12,
+    "end": 19.32
+  },
+  {
+    "word": "they",
+    "start": 19.32,
+    "end": 19.66
+  },
+  {
+    "word": "were",
+    "start": 19.66,
+    "end": 19.88
+  },
+  {
+    "word": "the",
+    "start": 19.88,
+    "end": 20.02
+  },
+  {
+    "word": "finest",
+    "start": 20.02,
+    "end": 20.54
+  },
+  {
+    "word": "he",
+    "start": 20.54,
+    "end": 21.12
+  },
+  {
+    "word": "had",
+    "start": 21.12,
+    "end": 21.22
+  },
+  {
+    "word": "tasted",
+    "start": 21.22,
+    "end": 21.7
+  },
+  {
+    "word": "in",
+    "start": 21.7,
+    "end": 22.02
+  },
+  {
+    "word": "years.",
+    "start": 22.02,
+    "end": 22.4
+  },
+  {
+    "word": "Baby",
+    "start": 23.32,
+    "end": 23.54
+  },
+  {
+    "word": "Joey",
+    "start": 23.54,
+    "end": 23.84
+  },
+  {
+    "word": "mashed",
+    "start": 23.84,
+    "end": 24.22
+  },
+  {
+    "word": "his",
+    "start": 24.22,
+    "end": 24.44
+  },
+  {
+    "word": "pancake",
+    "start": 24.44,
+    "end": 24.84
+  },
+  {
+    "word": "into",
+    "start": 24.84,
+    "end": 25.52
+  },
+  {
+    "word": "a",
+    "start": 25.52,
+    "end": 25.72
+  },
+  {
+    "word": "perfect",
+    "start": 25.72,
+    "end": 26.16
+  },
+  {
+    "word": "pancake",
+    "start": 26.16,
+    "end": 26.68
+  },
+  {
+    "word": "hat",
+    "start": 26.68,
+    "end": 27.04
+  },
+  {
+    "word": "for",
+    "start": 27.04,
+    "end": 27.66
+  },
+  {
+    "word": "waffles.",
+    "start": 27.66,
+    "end": 28.04
+  },
+  {
+    "word": "Waffles",
+    "start": 29.02,
+    "end": 29.5
+  },
+  {
+    "word": "did",
+    "start": 29.5,
+    "end": 29.74
+  },
+  {
+    "word": "not",
+    "start": 29.74,
+    "end": 29.9
+  },
+  {
+    "word": "mind",
+    "start": 29.9,
+    "end": 30.2
+  },
+  {
+    "word": "at",
+    "start": 30.2,
+    "end": 30.36
+  },
+  {
+    "word": "all.",
+    "start": 30.36,
+    "end": 30.6
+  }
+]

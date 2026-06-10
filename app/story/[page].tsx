@@ -10,32 +10,49 @@ import * as Speech from 'expo-speech';
 import { STORY_DATA, STORY_CHARACTERS } from '@/constants/storyData';
 import { useAlphabetStore } from '@/store/alphabetStore';
 
-// ── Syllable-weighted word timing ────────────────────────────────────────────
-// Counts vowel groups as a proxy for syllables so longer/harder words get more
-// highlight time than short words like "a" or "the".
-function syllableCount(word: string): number {
-  const clean = word.toLowerCase().replace(/[^a-z]/g, '');
-  if (!clean) return 1;
-  const groups = clean.match(/[aeiouy]+/g);
-  let n = groups ? groups.length : 1;
-  if (clean.length > 2 && clean.endsWith('e')) n = Math.max(1, n - 1);
-  return Math.max(1, n);
-}
+// ── Whisper word-timing data (exact timestamps from transcription) ───────────
+const TIMING: Record<number, { word: string; start: number; end: number }[]> = {
+  1:  require('@/assets/sounds/page1_timing.json'),
+  2:  require('@/assets/sounds/page2_timing.json'),
+  3:  require('@/assets/sounds/page3_timing.json'),
+  4:  require('@/assets/sounds/page4_timing.json'),
+  5:  require('@/assets/sounds/page5_timing.json'),
+  6:  require('@/assets/sounds/page6_timing.json'),
+  7:  require('@/assets/sounds/page7_timing.json'),
+  8:  require('@/assets/sounds/page8_timing.json'),
+  9:  require('@/assets/sounds/page9_timing.json'),
+  10: require('@/assets/sounds/page10_timing.json'),
+  11: require('@/assets/sounds/page11_timing.json'),
+  12: require('@/assets/sounds/page12_timing.json'),
+  13: require('@/assets/sounds/page13_timing.json'),
+  14: require('@/assets/sounds/page14_timing.json'),
+};
 
-// Returns the word index that should be highlighted at positionMillis.
-// cumulativeSyllables[i] = total syllables for words 0..i (pre-computed once).
-function wordIdxForPosition(
-  positionMillis: number,
-  durationMillis: number,
-  cumulativeSyllables: number[],
+// Match a display-word index to a Whisper word by stripping punctuation and comparing.
+// Returns the word index in the display `words` array that is currently being spoken.
+function activeDisplayWord(
+  positionSec: number,
+  timingWords: { word: string; start: number; end: number }[],
+  displayWords: string[],
 ): number {
-  if (!durationMillis || cumulativeSyllables.length === 0) return 0;
-  const total = cumulativeSyllables[cumulativeSyllables.length - 1];
-  const target = (positionMillis / durationMillis) * total;
-  for (let i = 0; i < cumulativeSyllables.length; i++) {
-    if (cumulativeSyllables[i] >= target) return i;
+  // Find which Whisper word is playing right now
+  let whisperIdx = -1;
+  for (let i = 0; i < timingWords.length; i++) {
+    if (positionSec >= timingWords[i].start && positionSec < timingWords[i].end) {
+      whisperIdx = i; break;
+    }
+    // In a gap between words, use the last word that finished
+    if (positionSec >= timingWords[i].end &&
+        (i + 1 >= timingWords.length || positionSec < timingWords[i + 1].start)) {
+      whisperIdx = i; break;
+    }
   }
-  return cumulativeSyllables.length - 1;
+  if (whisperIdx < 0) return -1;
+
+  // Map whisper word index → display word index proportionally
+  // (Whisper may split contractions or punctuation differently than split(/\s+/))
+  const ratio = displayWords.length / timingWords.length;
+  return Math.min(Math.round(whisperIdx * ratio), displayWords.length - 1);
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -82,11 +99,8 @@ export default function StoryPageScreen() {
   const words        = (pageData?.text ?? '').split(/\s+/).filter(Boolean);
   const hasText      = words.length > 0;
 
-  // Pre-compute cumulative syllable weights for this page (used for word highlighting)
-  const cumulativeSyllables = React.useMemo(() => {
-    let total = 0;
-    return words.map(w => { total += syllableCount(w); return total; });
-  }, [pageData?.text]);
+  // Exact Whisper timestamps for bundled audio (null for parent recordings)
+  const timingWords = TIMING[pageNum] ?? null;
 
   // ── Clean up everything when page changes or unmounts ──────────────────
   useEffect(() => {
@@ -143,12 +157,14 @@ export default function StoryPageScreen() {
           clearHighlight();
           return;
         }
-        if (s.isPlaying && s.durationMillis && words.length > 0) {
-          const idx = wordIdxForPosition(
-            s.positionMillis,
-            s.durationMillis,
-            cumulativeSyllables,
-          );
+        if (s.isPlaying && words.length > 0) {
+          const posSec = s.positionMillis / 1000;
+          const idx = timingWords
+            ? activeDisplayWord(posSec, timingWords, words)
+            : Math.min(
+                Math.floor((s.positionMillis / (s.durationMillis ?? 1)) * words.length),
+                words.length - 1,
+              );
           if (idx !== lastWordIdxRef.current) {
             lastWordIdxRef.current = idx;
             setActiveWordIdx(idx);
@@ -189,26 +205,16 @@ export default function StoryPageScreen() {
     setTtsPlaying(true);
     setActiveWordIdx(0);
 
-    // Syllable-weighted TTS timing: ~200 ms per syllable at rate 0.85
-    const msPerSyllable = 200;
-    const totalMs = cumulativeSyllables.length > 0
-      ? cumulativeSyllables[cumulativeSyllables.length - 1] * msPerSyllable
-      : words.length * 300;
-    const scheduleNext = (wordIdx: number, elapsed: number) => {
-      if (wordIdx >= words.length) {
-        setActiveWordIdx(-1);
-        setTtsPlaying(false);
-        return;
-      }
-      const syllablesSoFar = cumulativeSyllables[wordIdx] ?? 0;
-      const nextMs = (syllablesSoFar / (cumulativeSyllables[cumulativeSyllables.length - 1] || 1)) * totalMs;
-      const delay = Math.max(0, nextMs - elapsed);
-      ttsTimerRef.current = setTimeout(() => {
-        setActiveWordIdx(wordIdx);
-        scheduleNext(wordIdx + 1, nextMs);
-      }, delay);
+    // Simple even-paced TTS timing (~300 ms per word)
+    const msPerWord = 300;
+    let idx = 0;
+    const tick = () => {
+      if (idx >= words.length) { setActiveWordIdx(-1); setTtsPlaying(false); return; }
+      setActiveWordIdx(idx);
+      idx++;
+      ttsTimerRef.current = setTimeout(tick, msPerWord);
     };
-    scheduleNext(0, 0);
+    tick();
 
     // Wait for the primer to activate the audio session before speaking
     setTimeout(() => {

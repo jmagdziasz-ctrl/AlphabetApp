@@ -1,0 +1,337 @@
+[
+  {
+    "word": "Mama",
+    "start": 0.0,
+    "end": 0.38
+  },
+  {
+    "word": "put",
+    "start": 0.38,
+    "end": 0.58
+  },
+  {
+    "word": "the",
+    "start": 0.58,
+    "end": 0.72
+  },
+  {
+    "word": "phone",
+    "start": 0.72,
+    "end": 0.94
+  },
+  {
+    "word": "on",
+    "start": 0.94,
+    "end": 1.08
+  },
+  {
+    "word": "the",
+    "start": 1.08,
+    "end": 1.18
+  },
+  {
+    "word": "table",
+    "start": 1.18,
+    "end": 1.54
+  },
+  {
+    "word": "so",
+    "start": 1.54,
+    "end": 2.0
+  },
+  {
+    "word": "Granny",
+    "start": 2.0,
+    "end": 2.28
+  },
+  {
+    "word": "could",
+    "start": 2.28,
+    "end": 2.48
+  },
+  {
+    "word": "join",
+    "start": 2.48,
+    "end": 2.76
+  },
+  {
+    "word": "them.",
+    "start": 2.76,
+    "end": 3.02
+  },
+  {
+    "word": "Tell",
+    "start": 3.72,
+    "end": 3.92
+  },
+  {
+    "word": "me",
+    "start": 3.92,
+    "end": 4.16
+  },
+  {
+    "word": "everything,\"",
+    "start": 4.16,
+    "end": 5.46
+  },
+  {
+    "word": "said",
+    "start": 5.46,
+    "end": 5.76
+  },
+  {
+    "word": "Granny.",
+    "start": 5.76,
+    "end": 6.06
+  },
+  {
+    "word": "So",
+    "start": 6.8,
+    "end": 7.1
+  },
+  {
+    "word": "they",
+    "start": 7.1,
+    "end": 7.3
+  },
+  {
+    "word": "did.",
+    "start": 7.3,
+    "end": 7.56
+  },
+  {
+    "word": "All",
+    "start": 8.14,
+    "end": 8.38
+  },
+  {
+    "word": "talking",
+    "start": 8.38,
+    "end": 8.9
+  },
+  {
+    "word": "at",
+    "start": 8.9,
+    "end": 9.26
+  },
+  {
+    "word": "the",
+    "start": 9.26,
+    "end": 9.36
+  },
+  {
+    "word": "same",
+    "start": 9.36,
+    "end": 9.62
+  },
+  {
+    "word": "time.",
+    "start": 9.62,
+    "end": 10.12
+  },
+  {
+    "word": "Benny",
+    "start": 10.68,
+    "end": 10.86
+  },
+  {
+    "word": "told",
+    "start": 10.86,
+    "end": 11.12
+  },
+  {
+    "word": "about",
+    "start": 11.12,
+    "end": 11.4
+  },
+  {
+    "word": "the",
+    "start": 11.4,
+    "end": 11.56
+  },
+  {
+    "word": "flower",
+    "start": 11.56,
+    "end": 11.88
+  },
+  {
+    "word": "cloud.",
+    "start": 11.88,
+    "end": 12.3
+  },
+  {
+    "word": "Zara",
+    "start": 13.12,
+    "end": 13.36
+  },
+  {
+    "word": "told",
+    "start": 13.36,
+    "end": 13.58
+  },
+  {
+    "word": "about",
+    "start": 13.58,
+    "end": 13.86
+  },
+  {
+    "word": "the",
+    "start": 13.86,
+    "end": 14.04
+  },
+  {
+    "word": "eggshell.",
+    "start": 14.04,
+    "end": 14.48
+  },
+  {
+    "word": "Daddy",
+    "start": 15.24,
+    "end": 15.48
+  },
+  {
+    "word": "told",
+    "start": 15.48,
+    "end": 15.72
+  },
+  {
+    "word": "about",
+    "start": 15.72,
+    "end": 16.02
+  },
+  {
+    "word": "the",
+    "start": 16.02,
+    "end": 16.18
+  },
+  {
+    "word": "boot",
+    "start": 16.18,
+    "end": 16.42
+  },
+  {
+    "word": "cake.",
+    "start": 16.42,
+    "end": 16.74
+  },
+  {
+    "word": "Mama",
+    "start": 17.54,
+    "end": 17.94
+  },
+  {
+    "word": "told",
+    "start": 17.94,
+    "end": 18.18
+  },
+  {
+    "word": "about",
+    "start": 18.18,
+    "end": 18.5
+  },
+  {
+    "word": "waffles,",
+    "start": 18.5,
+    "end": 18.98
+  },
+  {
+    "word": "the",
+    "start": 19.5,
+    "end": 19.62
+  },
+  {
+    "word": "polar",
+    "start": 19.62,
+    "end": 19.88
+  },
+  {
+    "word": "bear.",
+    "start": 19.88,
+    "end": 20.18
+  },
+  {
+    "word": "Mr.",
+    "start": 21.04,
+    "end": 21.38
+  },
+  {
+    "word": "Henderson",
+    "start": 21.54,
+    "end": 21.88
+  },
+  {
+    "word": "told",
+    "start": 21.88,
+    "end": 22.72
+  },
+  {
+    "word": "about",
+    "start": 22.72,
+    "end": 23.08
+  },
+  {
+    "word": "the",
+    "start": 23.08,
+    "end": 23.28
+  },
+  {
+    "word": "perfect",
+    "start": 23.28,
+    "end": 23.88
+  },
+  {
+    "word": "flip.",
+    "start": 23.88,
+    "end": 24.62
+  },
+  {
+    "word": "Granny",
+    "start": 25.32,
+    "end": 25.58
+  },
+  {
+    "word": "laughed",
+    "start": 25.58,
+    "end": 25.88
+  },
+  {
+    "word": "and",
+    "start": 25.88,
+    "end": 26.2
+  },
+  {
+    "word": "laughed",
+    "start": 26.2,
+    "end": 26.46
+  },
+  {
+    "word": "until",
+    "start": 26.46,
+    "end": 27.62
+  },
+  {
+    "word": "she",
+    "start": 27.62,
+    "end": 27.86
+  },
+  {
+    "word": "said",
+    "start": 27.86,
+    "end": 28.12
+  },
+  {
+    "word": "her",
+    "start": 28.12,
+    "end": 28.36
+  },
+  {
+    "word": "tummy",
+    "start": 28.36,
+    "end": 28.7
+  },
+  {
+    "word": "hurt.",
+    "start": 28.7,
+    "end": 29.08
+  }
+]
