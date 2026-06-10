@@ -11,7 +11,17 @@ import {
 import * as Speech from 'expo-speech';
 import { Audio } from 'expo-av';
 
-const SUCCESS_SOUND = require('@/assets/sounds/success.wav');
+// Two celebration combos — chime plays first, then the voice clip
+const COMBOS = [
+  {
+    chime: require('@/assets/sounds/chime.mp3'),
+    voice: require('@/assets/sounds/youdidiit.mp3'),
+  },
+  {
+    chime: require('@/assets/sounds/chime2.mp3'),
+    voice: require('@/assets/sounds/greatjob.mp3'),
+  },
+];
 
 interface Props {
   visible: boolean;
@@ -60,25 +70,32 @@ export function FeedbackModal({ visible, success, onNext, onRetry, accentColor }
         ),
       ]).start();
 
-      // Play victory sound + speak encouragement when modal appears
+      // Play celebration combo when modal appears
       if (success) {
-        const phrases = [
-          'Amazing job!', 'You did it!', 'Fantastic!', 'Woohoo!',
-          'Super star!', 'Incredible!', 'Way to go!',
-        ];
-        const phrase = phrases[Math.floor(Math.random() * phrases.length)];
-
-        // Play the fun level-up sound, then speak after a short delay
+        const combo = COMBOS[Math.floor(Math.random() * COMBOS.length)];
         (async () => {
           try {
-            const { sound } = await Audio.Sound.createAsync(SUCCESS_SOUND, { shouldPlay: true });
-            sound.setOnPlaybackStatusUpdate((s) => {
-              if (s.isLoaded && s.didJustFinish) sound.unloadAsync();
+            await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
+            // Play chime first
+            const { sound: chimeSound } = await Audio.Sound.createAsync(
+              combo.chime, { shouldPlay: true },
+            );
+            // When chime finishes, play the voice clip
+            await new Promise<void>((resolve) => {
+              chimeSound.setOnPlaybackStatusUpdate((s) => {
+                if (s.isLoaded && s.didJustFinish) {
+                  chimeSound.unloadAsync();
+                  resolve();
+                }
+              });
+            });
+            const { sound: voiceSound } = await Audio.Sound.createAsync(
+              combo.voice, { shouldPlay: true },
+            );
+            voiceSound.setOnPlaybackStatusUpdate((s) => {
+              if (s.isLoaded && s.didJustFinish) voiceSound.unloadAsync();
             });
           } catch {}
-          setTimeout(() => {
-            Speech.speak(phrase, { pitch: 1.6, rate: 1.0 });
-          }, 300);
         })();
       } else {
         Speech.speak('Keep trying, you can do it!', { pitch: 1.3, rate: 1.0 });
