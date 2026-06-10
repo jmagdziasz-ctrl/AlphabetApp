@@ -10,6 +10,35 @@ import * as Speech from 'expo-speech';
 import { STORY_DATA, STORY_CHARACTERS } from '@/constants/storyData';
 import { useAlphabetStore } from '@/store/alphabetStore';
 
+// ── Syllable-weighted word timing ────────────────────────────────────────────
+// Counts vowel groups as a proxy for syllables so longer/harder words get more
+// highlight time than short words like "a" or "the".
+function syllableCount(word: string): number {
+  const clean = word.toLowerCase().replace(/[^a-z]/g, '');
+  if (!clean) return 1;
+  const groups = clean.match(/[aeiouy]+/g);
+  let n = groups ? groups.length : 1;
+  if (clean.length > 2 && clean.endsWith('e')) n = Math.max(1, n - 1);
+  return Math.max(1, n);
+}
+
+// Returns the word index that should be highlighted at positionMillis.
+// cumulativeSyllables[i] = total syllables for words 0..i (pre-computed once).
+function wordIdxForPosition(
+  positionMillis: number,
+  durationMillis: number,
+  cumulativeSyllables: number[],
+): number {
+  if (!durationMillis || cumulativeSyllables.length === 0) return 0;
+  const total = cumulativeSyllables[cumulativeSyllables.length - 1];
+  const target = (positionMillis / durationMillis) * total;
+  for (let i = 0; i < cumulativeSyllables.length; i++) {
+    if (cumulativeSyllables[i] >= target) return i;
+  }
+  return cumulativeSyllables.length - 1;
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Bundled narrator recordings — used when no parent recording exists for a page
 const BUNDLED_AUDIO: Record<number, number> = {
   1:  require('@/assets/sounds/page1.mp3'),
@@ -40,7 +69,7 @@ export default function StoryPageScreen() {
 
   const soundRef       = useRef<Audio.Sound | null>(null);
   const lastWordIdxRef = useRef<number>(-1);
-  const ttsTimerRef    = useRef<ReturnType<typeof setInterval> | null>(null);
+  const ttsTimerRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [playing,       setPlaying]       = useState(false);
   const [ttsPlaying,    setTtsPlaying]    = useState(false);
@@ -48,10 +77,16 @@ export default function StoryPageScreen() {
   const [activeWordIdx, setActiveWordIdx] = useState<number>(-1);
 
   // Parent recording takes priority; fall back to bundled narrator MP3
-  const audioUri    = storyAudioUris[pageNum] ?? storyAudioUris[String(pageNum) as any];
+  const audioUri     = storyAudioUris[pageNum] ?? storyAudioUris[String(pageNum) as any];
   const bundledAudio = BUNDLED_AUDIO[pageNum];
-  const words       = (pageData?.text ?? '').split(/\s+/).filter(Boolean);
-  const hasText     = words.length > 0;
+  const words        = (pageData?.text ?? '').split(/\s+/).filter(Boolean);
+  const hasText      = words.length > 0;
+
+  // Pre-compute cumulative syllable weights for this page (used for word highlighting)
+  const cumulativeSyllables = React.useMemo(() => {
+    let total = 0;
+    return words.map(w => { total += syllableCount(w); return total; });
+  }, [pageData?.text]);
 
   // ── Clean up everything when page changes or unmounts ──────────────────
   useEffect(() => {
@@ -62,7 +97,7 @@ export default function StoryPageScreen() {
       lastWordIdxRef.current = -1;
       // Stop TTS
       Speech.stop();
-      if (ttsTimerRef.current) { clearInterval(ttsTimerRef.current); ttsTimerRef.current = null; }
+      if (ttsTimerRef.current) { clearTimeout(ttsTimerRef.current); ttsTimerRef.current = null; }
     };
   }, [page]);
 
@@ -82,7 +117,7 @@ export default function StoryPageScreen() {
     setPlaying(false);
     // Stop TTS
     Speech.stop();
-    if (ttsTimerRef.current) { clearInterval(ttsTimerRef.current); ttsTimerRef.current = null; }
+    if (ttsTimerRef.current) { clearTimeout(ttsTimerRef.current); ttsTimerRef.current = null; }
     setTtsPlaying(false);
     clearHighlight();
   };
@@ -109,9 +144,10 @@ export default function StoryPageScreen() {
           return;
         }
         if (s.isPlaying && s.durationMillis && words.length > 0) {
-          const idx = Math.min(
-            Math.floor((s.positionMillis / s.durationMillis) * words.length),
-            words.length - 1,
+          const idx = wordIdxForPosition(
+            s.positionMillis,
+            s.durationMillis,
+            cumulativeSyllables,
           );
           if (idx !== lastWordIdxRef.current) {
             lastWordIdxRef.current = idx;
@@ -153,20 +189,26 @@ export default function StoryPageScreen() {
     setTtsPlaying(true);
     setActiveWordIdx(0);
 
-    // Approximate word timing: ~300 ms per word at rate 0.85
-    const msPerWord = 300;
-    let idx = 0;
-    ttsTimerRef.current = setInterval(() => {
-      idx += 1;
-      if (idx >= words.length) {
-        clearInterval(ttsTimerRef.current!);
-        ttsTimerRef.current = null;
+    // Syllable-weighted TTS timing: ~200 ms per syllable at rate 0.85
+    const msPerSyllable = 200;
+    const totalMs = cumulativeSyllables.length > 0
+      ? cumulativeSyllables[cumulativeSyllables.length - 1] * msPerSyllable
+      : words.length * 300;
+    const scheduleNext = (wordIdx: number, elapsed: number) => {
+      if (wordIdx >= words.length) {
         setActiveWordIdx(-1);
         setTtsPlaying(false);
-      } else {
-        setActiveWordIdx(idx);
+        return;
       }
-    }, msPerWord);
+      const syllablesSoFar = cumulativeSyllables[wordIdx] ?? 0;
+      const nextMs = (syllablesSoFar / (cumulativeSyllables[cumulativeSyllables.length - 1] || 1)) * totalMs;
+      const delay = Math.max(0, nextMs - elapsed);
+      ttsTimerRef.current = setTimeout(() => {
+        setActiveWordIdx(wordIdx);
+        scheduleNext(wordIdx + 1, nextMs);
+      }, delay);
+    };
+    scheduleNext(0, 0);
 
     // Wait for the primer to activate the audio session before speaking
     setTimeout(() => {
@@ -175,12 +217,12 @@ export default function StoryPageScreen() {
         rate: 0.85,
         pitch: 1.1,
         onDone: () => {
-          if (ttsTimerRef.current) { clearInterval(ttsTimerRef.current); ttsTimerRef.current = null; }
+          if (ttsTimerRef.current) { clearTimeout(ttsTimerRef.current); ttsTimerRef.current = null; }
           setActiveWordIdx(-1);
           setTtsPlaying(false);
         },
         onError: () => {
-          if (ttsTimerRef.current) { clearInterval(ttsTimerRef.current); ttsTimerRef.current = null; }
+          if (ttsTimerRef.current) { clearTimeout(ttsTimerRef.current); ttsTimerRef.current = null; }
           setActiveWordIdx(-1);
           setTtsPlaying(false);
         },
@@ -190,7 +232,7 @@ export default function StoryPageScreen() {
 
   const stopTTS = () => {
     Speech.stop();
-    if (ttsTimerRef.current) { clearInterval(ttsTimerRef.current); ttsTimerRef.current = null; }
+    if (ttsTimerRef.current) { clearTimeout(ttsTimerRef.current); ttsTimerRef.current = null; }
     setTtsPlaying(false);
     clearHighlight();
   };
@@ -204,7 +246,7 @@ export default function StoryPageScreen() {
       soundRef.current = null;
     }
     Speech.stop();
-    if (ttsTimerRef.current) { clearInterval(ttsTimerRef.current); ttsTimerRef.current = null; }
+    if (ttsTimerRef.current) { clearTimeout(ttsTimerRef.current); ttsTimerRef.current = null; }
     setPlaying(false);
     setTtsPlaying(false);
     clearHighlight();
