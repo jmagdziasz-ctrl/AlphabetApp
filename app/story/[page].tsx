@@ -137,7 +137,8 @@ export default function StoryPageScreen() {
   };
 
   // ── Audio playback — parent recording or bundled narrator MP3 ───────────
-  const playAudio = async (source: { uri: string } | number) => {
+  // highlight=true only for bundled audio (Whisper timestamps available)
+  const playAudio = async (source: { uri: string } | number, highlight: boolean) => {
     try {
       setLoading(true);
       await stopAll();
@@ -157,14 +158,9 @@ export default function StoryPageScreen() {
           clearHighlight();
           return;
         }
-        if (s.isPlaying && words.length > 0) {
-          const posSec = s.positionMillis / 1000;
-          const idx = timingWords
-            ? activeDisplayWord(posSec, timingWords, words)
-            : Math.min(
-                Math.floor((s.positionMillis / (s.durationMillis ?? 1)) * words.length),
-                words.length - 1,
-              );
+        // Only highlight words for bundled audio with Whisper timestamps
+        if (highlight && s.isPlaying && timingWords && words.length > 0) {
+          const idx = activeDisplayWord(s.positionMillis / 1000, timingWords, words);
           if (idx !== lastWordIdxRef.current) {
             lastWordIdxRef.current = idx;
             setActiveWordIdx(idx);
@@ -354,7 +350,9 @@ export default function StoryPageScreen() {
               style={styles.playBtn}
               onPress={playing
                 ? () => { soundRef.current?.stopAsync().catch(() => {}); setPlaying(false); clearHighlight(); }
-                : () => playAudio(audioUri ? { uri: audioUri } : bundledAudio!)}
+                : () => audioUri
+                  ? playAudio({ uri: audioUri }, false)
+                  : playAudio(bundledAudio!, true)}
               disabled={loading}
               activeOpacity={0.85}
             >
