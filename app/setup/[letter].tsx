@@ -17,12 +17,16 @@ import { ALPHABET_DATA } from '@/constants/alphabetData';
 import { SceneView } from '@/components/SceneView';
 import { useAlphabetStore } from '@/store/alphabetStore';
 
-const PREVIEW_HEIGHT = 200;
-
 export default function SetupLetterScreen() {
   const { letter } = useLocalSearchParams<{ letter: string }>();
   const router = useRouter();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
+
+  // Match the learn screen's scene height so face positions align between setup and learn
+  const LEARN_FIXED_H = 52 + 36 + 44 + 60 + 16;
+  const available = height - LEARN_FIXED_H;
+  const tracerSize = Math.floor(Math.min(width - 48, available * 0.55));
+  const PREVIEW_HEIGHT = Math.max(120, available - tracerSize);
   const { customizations, setCustomization, clearCustomization } = useAlphabetStore();
 
   const letterData = ALPHABET_DATA.find(d => d.letter === letter);
@@ -242,7 +246,7 @@ export default function SetupLetterScreen() {
       </View>
 
       {/* Fixed preview — always visible above the scroll */}
-      <View style={[styles.previewPanel, { width }]}>
+      <View style={[styles.previewPanel, { width, height: PREVIEW_HEIGHT }]}>
         <SceneView
           letterData={letterData}
           customization={previewCustomization}
@@ -367,7 +371,6 @@ const styles = StyleSheet.create({
   saveBtnText: { color: 'white', fontWeight: '700', fontSize: 16 },
 
   previewPanel: {
-    height: PREVIEW_HEIGHT,
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
     overflow: 'hidden',
