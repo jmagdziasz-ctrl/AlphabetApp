@@ -316,21 +316,7 @@ export default function StoryPageScreen() {
           <View style={{ width: 72 }} />
         </View>
 
-        {/* Story text bubble — always visible when there's text so kids can follow along */}
-        {hasText && pageData.image ? (
-          <View style={styles.textBubble} pointerEvents="none">
-            <Text style={styles.textBubbleContent}>
-              {words.map((word, i) => (
-                <Text
-                  key={i}
-                  style={i === activeWordIdx ? styles.wordHighlight : styles.wordNormal}
-                >
-                  {word}{i < words.length - 1 ? ' ' : ''}
-                </Text>
-              ))}
-            </Text>
-          </View>
-        ) : null}
+        {/* Text bubble removed — words appear in the illustrations directly */}
 
         {/* Bottom bar — prev + play + next */}
         <View style={styles.bottomBar} pointerEvents="box-none">
@@ -397,20 +383,6 @@ const styles = StyleSheet.create({
   topBtnText:  { color: '#FFF', fontSize: 15, fontWeight: '700' },
   pagePill:    { backgroundColor: 'rgba(0,0,0,0.45)', paddingVertical: 5, paddingHorizontal: 14, borderRadius: 20 },
   pagePillText:{ color: '#FFF', fontSize: 14, fontWeight: '700' },
-
-  textBubble: {
-    position: 'absolute',
-    bottom: 100,
-    left: 16,
-    right: 16,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  textBubbleContent: { flexDirection: 'row', flexWrap: 'wrap' },
-  wordNormal:    { color: '#FFF', fontSize: 18, fontWeight: '600', lineHeight: 28 },
-  wordHighlight: { color: '#FFE500', fontSize: 18, fontWeight: '800', lineHeight: 28 },
 
   bottomBar: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
