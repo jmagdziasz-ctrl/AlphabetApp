@@ -87,6 +87,12 @@ export default function HomeScreen() {
           >
             <Text style={styles.sectionBtnText}>📖 {isStoryUnlocked ? 'Story' : '🔒 Story'}</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.sectionBtn, { backgroundColor: '#E91E8C' }]}
+            onPress={() => router.push('/name')}
+          >
+            <Text style={styles.sectionBtnText}>✏️ My Name</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Letter grid */}

@@ -64,6 +64,10 @@ interface AlphabetStore {
   storyCharacters: Record<string, StoryCharacterCustomization>;
   // Per-page face positions: storyPagePositions[pageNum][characterKey]
   storyPagePositions: Record<string, Record<string, CharacterPagePosition>>;
+  // ── Name Spelling ─────────────────────────────────────────────────────────
+  childName: string;
+  childNamePhotoUri: string;
+  childNamePhotoRotation: number;
   // ── Settings ──────────────────────────────────────────────────────────────
   parentPin: string;
   // ── Actions ───────────────────────────────────────────────────────────────
@@ -80,6 +84,7 @@ interface AlphabetStore {
   setStoryCharacter: (key: string, data: Partial<StoryCharacterCustomization>) => Promise<void>;
   setStoryPagePosition: (page: number, characterKey: string, pos: CharacterPagePosition) => Promise<void>;
   clearStoryPagePosition: (page: number, characterKey: string) => Promise<void>;
+  setChildNameData: (name: string, photoUri: string, rotation: number) => Promise<void>;
   loadFromStorage: () => Promise<void>;
 }
 
@@ -92,6 +97,9 @@ export const useAlphabetStore = create<AlphabetStore>((set, get) => ({
   storyAudioUris:      {},
   storyCharacters:     {},
   storyPagePositions:  {},
+  childName:           '',
+  childNamePhotoUri:   '',
+  childNamePhotoRotation: 0,
   parentPin:           '1234',
 
   setCustomization: async (letter, data) => {
@@ -185,11 +193,21 @@ export const useAlphabetStore = create<AlphabetStore>((set, get) => ({
     await AsyncStorage.setItem('storyPagePositions', JSON.stringify(updated));
   },
 
+  setChildNameData: async (name, photoUri, rotation) => {
+    set({ childName: name, childNamePhotoUri: photoUri, childNamePhotoRotation: rotation });
+    await AsyncStorage.multiSet([
+      ['childName', name],
+      ['childNamePhotoUri', photoUri],
+      ['childNamePhotoRotation', String(rotation)],
+    ]);
+  },
+
   loadFromStorage: async () => {
     const results = await AsyncStorage.multiGet([
       'customizations', 'isPremiumUnlocked', 'isNumbersUnlocked',
       'isStoryUnlocked', 'parentPin', 'storyCustomizations', 'storyAudioUris',
       'storyCharacters', 'storyPagePositions',
+      'childName', 'childNamePhotoUri', 'childNamePhotoRotation',
     ]);
     const m = Object.fromEntries(results.map(([k, v]) => [k, v]));
     set({
@@ -200,8 +218,11 @@ export const useAlphabetStore = create<AlphabetStore>((set, get) => ({
       parentPin:           m.parentPin            ?? '1234',
       storyCustomizations: m.storyCustomizations  ? JSON.parse(m.storyCustomizations) : {},
       storyAudioUris:      m.storyAudioUris       ? JSON.parse(m.storyAudioUris)      : {},
-      storyCharacters:     m.storyCharacters      ? JSON.parse(m.storyCharacters)     : {},
-      storyPagePositions:  m.storyPagePositions   ? JSON.parse(m.storyPagePositions)  : {},
+      storyCharacters:        m.storyCharacters      ? JSON.parse(m.storyCharacters)     : {},
+      storyPagePositions:     m.storyPagePositions   ? JSON.parse(m.storyPagePositions)  : {},
+      childName:              m.childName            ?? '',
+      childNamePhotoUri:      m.childNamePhotoUri    ?? '',
+      childNamePhotoRotation: m.childNamePhotoRotation ? Number(m.childNamePhotoRotation) : 0,
     });
   },
 }));
