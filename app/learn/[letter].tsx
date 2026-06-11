@@ -30,7 +30,15 @@ export default function LearnScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [isSuccess, setIsSuccess]     = useState(false);
   const [tracerKey, setTracerKey]     = useState(0);
+  const [isLowercase, setIsLowercase] = useState(false);
   const attemptsRef = useRef(0);
+
+  const switchCase = (lowercase: boolean) => {
+    if (lowercase === isLowercase) return;
+    setIsLowercase(lowercase);
+    setTracerKey(k => k + 1);
+    setProgress(0);
+  };
 
   // Guard: redirect to paywall if this letter isn't unlocked
   const isLocked = letter ? !FREE_LETTERS.has(letter) && !isPremiumUnlocked : false;
@@ -39,13 +47,14 @@ export default function LearnScreen() {
   }, [isLocked]);
 
   // ── Dynamic sizing ──────────────────────────────────────────────────────────
-  // Reserve space for: header + trace label + progress bar+text + nav row + padding
+  // Reserve space for: header + trace label + case toggle + progress bar+text + nav row + padding
   const HEADER_H   = 52;
   const LABEL_H    = 36;
+  const TOGGLE_H   = 40;
   const PROGRESS_H = 44;
   const NAV_H      = 60;
   const PADDING_H  = 16;
-  const FIXED_H    = HEADER_H + LABEL_H + PROGRESS_H + NAV_H + PADDING_H;
+  const FIXED_H    = HEADER_H + LABEL_H + TOGGLE_H + PROGRESS_H + NAV_H + PADDING_H;
 
   const available  = height - FIXED_H;
   // Give ~45% to scene, ~55% to tracer; clamp tracer to screen width
@@ -99,14 +108,30 @@ export default function LearnScreen() {
 
       {/* Tracing label */}
       <Text style={[styles.traceLabel, { color: letterData.accentColor }]}>
-        Trace the letter {letter}!
+        Trace the letter {isLowercase ? letter?.toLowerCase() : letter}!
       </Text>
+
+      {/* Case toggle */}
+      <View style={styles.caseToggleRow}>
+        <TouchableOpacity
+          style={[styles.caseBtn, !isLowercase && { backgroundColor: letterData.accentColor }]}
+          onPress={() => switchCase(false)}
+        >
+          <Text style={[styles.caseBtnText, !isLowercase && styles.caseBtnTextActive]}>A</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.caseBtn, isLowercase && { backgroundColor: letterData.accentColor }]}
+          onPress={() => switchCase(true)}
+        >
+          <Text style={[styles.caseBtnText, isLowercase && styles.caseBtnTextActive]}>a</Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Tracer */}
       <View style={styles.tracerWrapper}>
         <LetterTracer
           key={tracerKey}
-          letter={letter ?? 'A'}
+          letter={isLowercase ? (letter?.toLowerCase() ?? 'a') : (letter ?? 'A')}
           size={tracerSize}
           accentColor={letterData.accentColor}
           onComplete={handleComplete}
@@ -171,8 +196,17 @@ const styles = StyleSheet.create({
   headerBtnText: { fontSize: 16, color: '#607D8B', fontWeight: '600' },
   headerLetter:  { fontSize: 36, fontWeight: '900' },
 
-  traceLabel: { fontSize: 18, fontWeight: '700', textAlign: 'center', marginVertical: 4 },
+  traceLabel: { fontSize: 18, fontWeight: '700', textAlign: 'center', marginTop: 4, marginBottom: 2 },
   tracerWrapper: { alignItems: 'center' },
+
+  caseToggleRow: { flexDirection: 'row', justifyContent: 'center', marginBottom: 6, borderRadius: 20, overflow: 'hidden', alignSelf: 'center' },
+  caseBtn: {
+    width: 44, height: 30, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1.5, borderColor: '#E0E0E0',
+    backgroundColor: '#F5F5F5',
+  },
+  caseBtnText:       { fontSize: 16, fontWeight: '800', color: '#9E9E9E' },
+  caseBtnTextActive: { color: '#FFF' },
 
   progressTrack: {
     alignSelf: 'center',

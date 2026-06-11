@@ -24,11 +24,12 @@ export default function HomeScreen() {
   const isPremiumUnlocked = useAlphabetStore(s => s.isPremiumUnlocked);
   const isNumbersUnlocked = useAlphabetStore(s => s.isNumbersUnlocked);
   const isStoryUnlocked   = useAlphabetStore(s => s.isStoryUnlocked);
+  const isNamesUnlocked   = useAlphabetStore(s => s.isNamesUnlocked);
   const parentPin         = useAlphabetStore(s => s.parentPin);
 
   // Calculate button size so the whole screen fits without scrolling.
   // Reserve space for title, subtitle, section buttons, unlock banner, setup button, and padding.
-  const hasAnyLocked  = !isPremiumUnlocked || !isNumbersUnlocked || !isStoryUnlocked;
+  const hasAnyLocked  = !isPremiumUnlocked || !isNumbersUnlocked || !isStoryUnlocked || !isNamesUnlocked;
   const nonGridHeight = hasAnyLocked ? 230 : 185;
   const gridHeight    = height - nonGridHeight;
   const btnByHeight   = (gridHeight - GAP * (ROWS - 1)) / ROWS;
@@ -88,10 +89,10 @@ export default function HomeScreen() {
             <Text style={styles.sectionBtnText}>📖 {isStoryUnlocked ? 'Story' : '🔒 Story'}</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.sectionBtn, { backgroundColor: '#E91E8C' }]}
-            onPress={() => router.push('/name')}
+            style={[styles.sectionBtn, { backgroundColor: isNamesUnlocked ? '#E91E8C' : '#9E9E9E' }]}
+            onPress={() => isNamesUnlocked ? router.push('/name') : router.push('/paywall')}
           >
-            <Text style={styles.sectionBtnText}>✏️ My Name</Text>
+            <Text style={styles.sectionBtnText}>✏️ {isNamesUnlocked ? 'Names' : '🔒 Names'}</Text>
           </TouchableOpacity>
         </View>
 

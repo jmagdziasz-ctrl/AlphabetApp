@@ -56,6 +56,8 @@ interface AlphabetStore {
   isPremiumUnlocked: boolean;
   // ── Numbers ───────────────────────────────────────────────────────────────
   isNumbersUnlocked: boolean;
+  // ── Names ─────────────────────────────────────────────────────────────────
+  isNamesUnlocked: boolean;
   // ── Story ─────────────────────────────────────────────────────────────────
   isStoryUnlocked: boolean;
   storyCustomizations: Record<number, StoryPageCustomization>;
@@ -76,6 +78,7 @@ interface AlphabetStore {
   unlockPremium: () => Promise<void>;
   unlockNumbers: () => Promise<void>;
   unlockStory: () => Promise<void>;
+  unlockNames: () => Promise<void>;
   unlockAll: () => Promise<void>;
   setParentPin: (pin: string) => Promise<void>;
   setStoryCustomization: (page: number, data: Partial<StoryPageCustomization>) => Promise<void>;
@@ -93,6 +96,7 @@ export const useAlphabetStore = create<AlphabetStore>((set, get) => ({
   isPremiumUnlocked:   false,
   isNumbersUnlocked:   false,
   isStoryUnlocked:     false,
+  isNamesUnlocked:     false,
   storyCustomizations: {},
   storyAudioUris:      {},
   storyCharacters:     {},
@@ -130,12 +134,18 @@ export const useAlphabetStore = create<AlphabetStore>((set, get) => ({
     await AsyncStorage.setItem('isStoryUnlocked', 'true');
   },
 
+  unlockNames: async () => {
+    set({ isNamesUnlocked: true });
+    await AsyncStorage.setItem('isNamesUnlocked', 'true');
+  },
+
   unlockAll: async () => {
-    set({ isPremiumUnlocked: true, isNumbersUnlocked: true, isStoryUnlocked: true });
+    set({ isPremiumUnlocked: true, isNumbersUnlocked: true, isStoryUnlocked: true, isNamesUnlocked: true });
     await AsyncStorage.multiSet([
       ['isPremiumUnlocked', 'true'],
       ['isNumbersUnlocked', 'true'],
       ['isStoryUnlocked',   'true'],
+      ['isNamesUnlocked',   'true'],
     ]);
   },
 
@@ -205,7 +215,7 @@ export const useAlphabetStore = create<AlphabetStore>((set, get) => ({
   loadFromStorage: async () => {
     const results = await AsyncStorage.multiGet([
       'customizations', 'isPremiumUnlocked', 'isNumbersUnlocked',
-      'isStoryUnlocked', 'parentPin', 'storyCustomizations', 'storyAudioUris',
+      'isStoryUnlocked', 'isNamesUnlocked', 'parentPin', 'storyCustomizations', 'storyAudioUris',
       'storyCharacters', 'storyPagePositions',
       'childName', 'childNamePhotoUri', 'childNamePhotoRotation',
     ]);
@@ -215,6 +225,7 @@ export const useAlphabetStore = create<AlphabetStore>((set, get) => ({
       isPremiumUnlocked:   m.isPremiumUnlocked    === 'true',
       isNumbersUnlocked:   m.isNumbersUnlocked    === 'true',
       isStoryUnlocked:     m.isStoryUnlocked      === 'true',
+      isNamesUnlocked:     m.isNamesUnlocked      === 'true',
       parentPin:           m.parentPin            ?? '1234',
       storyCustomizations: m.storyCustomizations  ? JSON.parse(m.storyCustomizations) : {},
       storyAudioUris:      m.storyAudioUris       ? JSON.parse(m.storyAudioUris)      : {},

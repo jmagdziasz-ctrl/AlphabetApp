@@ -31,7 +31,7 @@ const SECTIONS = [
   },
   {
     key: 'name',
-    label: '✏️ Name Setup',
+    label: '✏️ Names Setup',
     subtitle: "Set your child's name and photo for letter tracing",
     color: '#E91E8C',
     route: '/setup/name',

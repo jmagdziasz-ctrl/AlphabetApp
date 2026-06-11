@@ -19,6 +19,7 @@ export const PRODUCT_IDS = {
   alphabet: 'com.jmagdziasz.abcfamily.unlock_all',      // $2.99
   numbers:  'com.jmagdziasz.abcfamily.numbers',          // $1.99
   story:    'com.jmagdziasz.abcfamily.story',            // $3.99
+  names:    'com.jmagdziasz.abcfamily.names',            // $1.99
   bundle:   'com.jmagdziasz.abcfamily.bundle',           // $4.99
   monthly:  'com.jmagdziasz.abcfamily.allaccess_monthly', // $4.99/month
 };
@@ -34,6 +35,16 @@ const TIERS = [
     desc: 'Unlock all 10 numbers with illustrated scenes, tracing practice, and custom family photo overlays.',
     bullets: ['Numbers 1–10 with tracing', 'Custom photo for each number', 'Illustrated learning scenes'],
     color: '#4CAF50',
+  },
+  {
+    id: 'names',
+    emoji: '✏️',
+    title: 'Name Spelling',
+    price: '$1.99',
+    priceNote: 'one-time',
+    desc: "Trace and spell your child's name! Set a photo and name in Parent Setup, then your child traces each letter to spell it out.",
+    bullets: ['Spell your child's name by tracing', 'Custom family photo display', 'Phone: one letter at a time · iPad: all at once'],
+    color: '#E91E8C',
   },
   {
     id: 'alphabet',
@@ -128,6 +139,7 @@ export default function PaywallScreen() {
       if (tierId === 'alphabet') await store.unlockPremium();
       if (tierId === 'numbers')  await store.unlockNumbers();
       if (tierId === 'story')    await store.unlockStory();
+      if (tierId === 'names')    await store.unlockNames();
       if (tierId === 'bundle')   { await store.unlockNumbers(); await store.unlockStory(); }
       if (tierId === 'monthly')  await store.unlockAll();
 

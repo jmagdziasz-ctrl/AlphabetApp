@@ -19,6 +19,12 @@ export default function NameSpellingScreen() {
   const childName         = useAlphabetStore(s => s.childName);
   const childNamePhotoUri = useAlphabetStore(s => s.childNamePhotoUri);
   const childNamePhotoRotation = useAlphabetStore(s => s.childNamePhotoRotation);
+  const isNamesUnlocked   = useAlphabetStore(s => s.isNamesUnlocked);
+
+  // Guard: redirect to paywall if not unlocked
+  React.useEffect(() => {
+    if (!isNamesUnlocked) router.replace('/paywall');
+  }, [isNamesUnlocked]);
 
   // Letters of the name that can be traced (A-Z only)
   const nameLetters = childName.toUpperCase().split('').filter(c => /[A-Z]/.test(c));
@@ -100,13 +106,16 @@ export default function NameSpellingScreen() {
     }
   };
 
+  // ── Not unlocked (redirect happens via useEffect, show nothing meanwhile) ──
+  if (!isNamesUnlocked) return null;
+
   // ── No name set ────────────────────────────────────────────────────────
   if (!childName) {
     return (
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}><Text style={styles.backText}>← Back</Text></TouchableOpacity>
-          <Text style={styles.headerTitle}>My Name</Text>
+          <Text style={styles.headerTitle}>Names</Text>
           <View style={{ width: 60 }} />
         </View>
         <View style={styles.emptyState}>
@@ -177,7 +186,7 @@ export default function NameSpellingScreen() {
       <SafeAreaView style={styles.safe}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}><Text style={styles.backText}>← Back</Text></TouchableOpacity>
-          <Text style={styles.headerTitle}>Spell My Name!</Text>
+          <Text style={styles.headerTitle}>Spell Names!</Text>
           <View style={{ width: 60 }} />
         </View>
 
@@ -229,7 +238,7 @@ export default function NameSpellingScreen() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}><Text style={styles.backText}>← Back</Text></TouchableOpacity>
-        <Text style={styles.headerTitle}>Spell My Name!</Text>
+        <Text style={styles.headerTitle}>Spell Names!</Text>
         <View style={{ width: 60 }} />
       </View>
 

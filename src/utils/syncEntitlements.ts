@@ -14,6 +14,7 @@ export async function syncEntitlements(
     if (active['alphabet']) await store.unlockPremium();
     if (active['numbers'])  await store.unlockNumbers();
     if (active['story'])    await store.unlockStory();
+    if (active['names'])    await store.unlockNames();
     if (active['bundle'])   { await store.unlockNumbers(); await store.unlockStory(); }
   }
 }
