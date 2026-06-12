@@ -29,38 +29,47 @@ export default function NameTraceScreen() {
   const displayChars = member ? member.name.toUpperCase().split('') : [];
 
   // ── Phone state — one letter at a time ─────────────────────────────────
-  const [currentIdx,   setCurrentIdx]   = useState(0);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [isSuccess,    setIsSuccess]    = useState(false);
-  const [completedSet, setCompletedSet] = useState<Set<number>>(new Set());
-  const [tracerKeys,   setTracerKeys]   = useState<number[]>(() => nameLetters.map(() => 0));
-  const attemptsRef = useRef(0);
+  const [currentIdx,    setCurrentIdx]    = useState(0);
+  const [completedSet,  setCompletedSet]  = useState<Set<number>>(new Set());
+  const [tracerKeys,    setTracerKeys]    = useState<number[]>(() => nameLetters.map(() => 0));
+  // 'success' = brief green flash before auto-advancing
+  // 'retry'   = brief red flash before auto-resetting
+  const [inlineFeedback, setInlineFeedback] = useState<'success' | 'retry' | null>(null);
+  const [doneModal,      setDoneModal]      = useState(false);
+  const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleComplete = useCallback((score: number) => {
+    if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
     const success = score >= 0.8;
-    setIsSuccess(success);
-    if (!success) attemptsRef.current += 1;
-    setModalVisible(true);
-  }, []);
+    setInlineFeedback(success ? 'success' : 'retry');
 
-  const handleNext = () => {
-    setModalVisible(false);
-    if (isSuccess) {
+    if (success) {
+      // Mark current letter complete immediately (so chip turns green)
       setCompletedSet(prev => new Set(prev).add(currentIdx));
-      if (currentIdx < nameLetters.length - 1) {
-        setCurrentIdx(i => i + 1);
-      } else {
-        // All done — reset for another round
-        setCurrentIdx(0);
-        setCompletedSet(new Set());
-        setTracerKeys(keys => keys.map(k => k + 1));
-      }
-    }
-  };
 
-  const handleRetry = () => {
-    setModalVisible(false);
-    setTracerKeys(keys => keys.map((k, i) => i === currentIdx ? k + 1 : k));
+      feedbackTimer.current = setTimeout(() => {
+        setInlineFeedback(null);
+        if (currentIdx >= nameLetters.length - 1) {
+          // Last letter — celebrate the whole name!
+          setDoneModal(true);
+        } else {
+          setCurrentIdx(currentIdx + 1);
+        }
+      }, 700);
+    } else {
+      // Failed — reset this tracer after a short pause
+      feedbackTimer.current = setTimeout(() => {
+        setInlineFeedback(null);
+        setTracerKeys(keys => keys.map((k, i) => i === currentIdx ? k + 1 : k));
+      }, 1000);
+    }
+  }, [currentIdx, nameLetters.length]);
+
+  const handleDoneNext = () => {
+    setDoneModal(false);
+    setCurrentIdx(0);
+    setCompletedSet(new Set());
+    setTracerKeys(keys => keys.map(k => k + 1));
   };
 
   // ── Tablet state — all letters at once ─────────────────────────────────
@@ -214,8 +223,8 @@ export default function NameTraceScreen() {
   // ──────────────────────────────────────────────────────────────────────
   // PHONE LAYOUT
   // ──────────────────────────────────────────────────────────────────────
-  const FIXED_H   = 52 + HEADER_H + 36 + 28 + 60 + 16; // header+photo+label+dots+nav+padding
-  const available = height - FIXED_H;
+  const FIXED_H    = 52 + HEADER_H + 36 + 28 + 16; // header+photo+label+dots+padding
+  const available  = height - FIXED_H;
   const tracerSize = Math.floor(Math.min(width - 48, available));
   const currentLetter = nameLetters[currentIdx];
 
@@ -235,19 +244,36 @@ export default function NameTraceScreen() {
         Trace the letter {currentLetter}!
       </Text>
 
+      {/* Tracer with inline feedback overlay — no modal between letters */}
       <View style={{ alignItems: 'center' }}>
-        <LetterTracer
-          key={tracerKeys[currentIdx]}
-          letter={currentLetter}
-          size={tracerSize}
-          accentColor={ACCENT}
-          onComplete={handleComplete}
-          onProgress={() => {}}
-          onTouchingChange={() => {}}
-        />
+        <View style={{ width: tracerSize, height: tracerSize }}>
+          <LetterTracer
+            key={tracerKeys[currentIdx]}
+            letter={currentLetter}
+            size={tracerSize}
+            accentColor={inlineFeedback === 'retry' ? '#F44336' : ACCENT}
+            onComplete={handleComplete}
+            onProgress={() => {}}
+            onTouchingChange={() => {}}
+          />
+          {/* Overlay blocks touch-through and shows brief result */}
+          {inlineFeedback && (
+            <View
+              style={[
+                styles.feedbackOverlay,
+                { backgroundColor: inlineFeedback === 'success' ? '#4CAF5099' : '#F4433644' },
+              ]}
+              pointerEvents="box-only"
+            >
+              <Text style={styles.feedbackOverlayText}>
+                {inlineFeedback === 'success' ? '⭐ Great!' : '🔄 Try Again!'}
+              </Text>
+            </View>
+          )}
+        </View>
       </View>
 
-      {/* Navigation dots */}
+      {/* Progress dots */}
       <View style={styles.dotsRow}>
         {nameLetters.map((_, i) => (
           <View
@@ -261,30 +287,12 @@ export default function NameTraceScreen() {
         ))}
       </View>
 
-      {/* Prev / Next */}
-      <View style={styles.navRow}>
-        <TouchableOpacity
-          style={[styles.navBtn, { opacity: currentIdx > 0 ? 1 : 0.3 }]}
-          onPress={() => setCurrentIdx(i => i - 1)}
-          disabled={currentIdx === 0}
-        >
-          <Text style={styles.navBtnText}>← Prev</Text>
-        </TouchableOpacity>
-        <Text style={styles.pageIndicator}>{currentIdx + 1} / {nameLetters.length}</Text>
-        <TouchableOpacity
-          style={[styles.navBtn, { opacity: currentIdx < nameLetters.length - 1 ? 1 : 0.3 }]}
-          onPress={() => setCurrentIdx(i => i + 1)}
-          disabled={currentIdx === nameLetters.length - 1}
-        >
-          <Text style={styles.navBtnText}>Next →</Text>
-        </TouchableOpacity>
-      </View>
-
+      {/* Celebration modal — only shown when ALL letters are done */}
       <FeedbackModal
-        visible={modalVisible}
-        success={isSuccess}
-        onNext={handleNext}
-        onRetry={handleRetry}
+        visible={doneModal}
+        success={true}
+        onNext={handleDoneNext}
+        onRetry={handleDoneNext}
         accentColor={ACCENT}
       />
     </SafeAreaView>
@@ -343,15 +351,21 @@ const styles = StyleSheet.create({
 
   traceLabel: { fontSize: 18, fontWeight: '700', textAlign: 'center', marginVertical: 4 },
 
+  feedbackOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  feedbackOverlayText: {
+    fontSize: 32, fontWeight: '900', color: '#FFF',
+    textShadowColor: '#00000044', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 4,
+  },
+
   dotsRow:   { flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: 8 },
   dot:       { width: 10, height: 10, borderRadius: 5, backgroundColor: '#F8BBD9' },
   dotActive: { backgroundColor: ACCENT, transform: [{ scale: 1.3 }] },
   dotDone:   { backgroundColor: '#4CAF50' },
-
-  navRow:        { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 8, marginBottom: 4 },
-  navBtn:        { backgroundColor: ACCENT, paddingVertical: 8, paddingHorizontal: 18, borderRadius: 50 },
-  navBtnText:    { color: '#FFF', fontWeight: '700', fontSize: 15 },
-  pageIndicator: { fontSize: 15, color: '#9E9E9E' },
 
   // Tablet
   tabletTracerRow:  { paddingHorizontal: 16, paddingVertical: 20, gap: 16, alignItems: 'flex-start' },
