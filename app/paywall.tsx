@@ -42,8 +42,8 @@ const TIERS = [
     title: 'Name Spelling',
     price: '$1.99',
     priceNote: 'one-time',
-    desc: "Trace and spell your child's name! Set a photo and name in Parent Setup, then your child traces each letter to spell it out.",
-    bullets: ['Spell your child's name by tracing', 'Custom family photo display', 'Phone: one letter at a time · iPad: all at once'],
+    desc: "Practice spelling child and family names! Add photos and names for everyone in the family, then trace each letter to spell them out.",
+    bullets: ['Spelling of child and family names', 'Portrait photo for each family member', 'Phone: one letter at a time · iPad: all at once'],
     color: '#E91E8C',
   },
   {
