@@ -68,6 +68,7 @@ export default function SetupLetterScreen() {
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.8,
+      presentationStyle: ImagePicker.UIImagePickerPresentationStyle.FULL_SCREEN,
     });
     if (!result.canceled && result.assets[0]) {
       if (slot === 1) { setImageUri(result.assets[0].uri); setRotation(0); }

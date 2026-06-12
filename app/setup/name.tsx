@@ -48,6 +48,8 @@ export default function NameSetupScreen() {
       allowsEditing: true,
       aspect: [3, 4],   // portrait crop to show more of face
       quality: 0.8,
+      // Force full-screen on iPad so the crop UI appears (popover mode disables editing)
+      presentationStyle: ImagePicker.UIImagePickerPresentationStyle.FULL_SCREEN,
     });
     if (!result.canceled && result.assets[0]) {
       setFormPhotoUri(result.assets[0].uri);
