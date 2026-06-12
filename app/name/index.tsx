@@ -1,305 +1,91 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  useWindowDimensions, Image, ScrollView,
+  ScrollView, Image, useWindowDimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAlphabetStore } from '@/store/alphabetStore';
-import { LetterTracer } from '@/components/LetterTracer';
-import { FeedbackModal } from '@/components/FeedbackModal';
 
 const ACCENT = '#E91E8C';
 
-export default function NameSpellingScreen() {
-  const router = useRouter();
-  const { width, height } = useWindowDimensions();
-  const isTablet = width >= 768;
+export default function NamesScreen() {
+  const router   = useRouter();
+  const { width } = useWindowDimensions();
+  const isTablet  = width >= 768;
 
-  const childName         = useAlphabetStore(s => s.childName);
-  const childNamePhotoUri = useAlphabetStore(s => s.childNamePhotoUri);
-  const childNamePhotoRotation = useAlphabetStore(s => s.childNamePhotoRotation);
-  const isNamesUnlocked   = useAlphabetStore(s => s.isNamesUnlocked);
+  const familyMembers  = useAlphabetStore(s => s.familyMembers);
+  const isNamesUnlocked = useAlphabetStore(s => s.isNamesUnlocked);
 
   // Guard: redirect to paywall if not unlocked
   React.useEffect(() => {
     if (!isNamesUnlocked) router.replace('/paywall');
   }, [isNamesUnlocked]);
 
-  // Letters of the name that can be traced (A-Z only)
-  const nameLetters = childName.toUpperCase().split('').filter(c => /[A-Z]/.test(c));
-  // All characters including spaces/symbols for display
-  const displayChars = childName.toUpperCase().split('');
-
-  // ── Phone state — one letter at a time ─────────────────────────────────
-  const [currentIdx,    setCurrentIdx]    = useState(0);
-  const [modalVisible,  setModalVisible]  = useState(false);
-  const [isSuccess,     setIsSuccess]     = useState(false);
-  const [completedSet,  setCompletedSet]  = useState<Set<number>>(new Set());
-  const [tracerKeys,    setTracerKeys]    = useState<number[]>(() => nameLetters.map(() => 0));
-  const attemptsRef = useRef(0);
-
-  const handleComplete = useCallback((score: number) => {
-    const success = score >= 0.8;
-    setIsSuccess(success);
-    if (!success) attemptsRef.current += 1;
-    setModalVisible(true);
-  }, []);
-
-  const handleNext = () => {
-    setModalVisible(false);
-    if (isSuccess) {
-      setCompletedSet(prev => new Set(prev).add(currentIdx));
-      if (currentIdx < nameLetters.length - 1) {
-        setCurrentIdx(i => i + 1);
-      } else {
-        // All done — show congrats
-        setCurrentIdx(0);
-        setCompletedSet(new Set());
-        setTracerKeys(keys => keys.map(k => k + 1));
-      }
-    }
-  };
-
-  const handleRetry = () => {
-    setModalVisible(false);
-    setTracerKeys(keys => keys.map((k, i) => i === currentIdx ? k + 1 : k));
-  };
-
-  // ── Tablet state — all letters at once ─────────────────────────────────
-  const [tabletCompleted, setTabletCompleted] = useState<Set<number>>(new Set());
-  const [tabletKeys,      setTabletKeys]      = useState<number[]>(() => nameLetters.map(() => 0));
-  const [tabletModal,     setTabletModal]     = useState(false);
-  const [tabletSuccess,   setTabletSuccess]   = useState(false);
-  const [tabletActiveIdx, setTabletActiveIdx] = useState<number | null>(null);
-
-  const handleTabletComplete = useCallback((idx: number, score: number) => {
-    if (score >= 0.8) {
-      setTabletCompleted(prev => {
-        const next = new Set(prev).add(idx);
-        if (next.size === nameLetters.length) {
-          setTabletSuccess(true);
-          setTabletModal(true);
-        }
-        return next;
-      });
-    } else {
-      setTabletActiveIdx(idx);
-      setTabletSuccess(false);
-      setTabletModal(true);
-    }
-  }, [nameLetters.length]);
-
-  const handleTabletRetry = () => {
-    setTabletModal(false);
-    if (tabletActiveIdx !== null) {
-      setTabletKeys(keys => keys.map((k, i) => i === tabletActiveIdx ? k + 1 : k));
-    }
-  };
-
-  const handleTabletNext = () => {
-    setTabletModal(false);
-    if (tabletSuccess) {
-      // Reset all
-      setTabletCompleted(new Set());
-      setTabletKeys(keys => keys.map(k => k + 1));
-    }
-  };
-
-  // ── Not unlocked (redirect happens via useEffect, show nothing meanwhile) ──
   if (!isNamesUnlocked) return null;
 
-  // ── No name set ────────────────────────────────────────────────────────
-  if (!childName) {
-    return (
-      <SafeAreaView style={styles.safe}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}><Text style={styles.backText}>← Back</Text></TouchableOpacity>
-          <Text style={styles.headerTitle}>Names</Text>
-          <View style={{ width: 60 }} />
-        </View>
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyEmoji}>✏️</Text>
-          <Text style={styles.emptyTitle}>No Name Set Yet</Text>
-          <Text style={styles.emptySubtitle}>Ask a parent to set up your name in Parent Setup.</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  // ── Shared header with photo + name display ────────────────────────────
-  const NameHeader = ({ activeLetterIdx }: { activeLetterIdx?: number }) => (
-    <View style={styles.nameHeader}>
-      {childNamePhotoUri ? (
-        <View style={styles.photoCircle}>
-          <Image
-            source={{ uri: childNamePhotoUri }}
-            style={[styles.photoImg, { transform: [{ rotate: `${childNamePhotoRotation}deg` }] }]}
-            resizeMode="cover"
-          />
-        </View>
-      ) : (
-        <View style={[styles.photoCircle, styles.photoPlaceholder]}>
-          <Text style={{ fontSize: 32 }}>😊</Text>
-        </View>
-      )}
-      <View style={styles.nameLettersRow}>
-        {displayChars.map((c, i) => {
-          if (c === ' ') return <View key={i} style={{ width: 12 }} />;
-          // Map display char index to nameLetters index
-          const traceIdx = nameLetters.indexOf(c, displayChars.slice(0, i).filter(x => /[A-Z]/.test(x)).length);
-          const actualTraceIdx = nameLetters.slice(0, displayChars.slice(0, i).filter(x => /[A-Z]/.test(x)).length + 1).lastIndexOf(c);
-          // Simpler: count A-Z chars up to this position
-          const lettersBefore = displayChars.slice(0, i).filter(x => /[A-Z]/.test(x)).length;
-          const isActive    = activeLetterIdx === lettersBefore;
-          const isCompleted = isTablet
-            ? tabletCompleted.has(lettersBefore)
-            : completedSet.has(lettersBefore);
-          return (
-            <View
-              key={i}
-              style={[
-                styles.letterChip,
-                isActive    && styles.letterChipActive,
-                isCompleted && styles.letterChipDone,
-              ]}
-            >
-              <Text style={[
-                styles.letterChipText,
-                isActive    && styles.letterChipTextActive,
-                isCompleted && styles.letterChipTextDone,
-              ]}>{c}</Text>
-            </View>
-          );
-        })}
-      </View>
-    </View>
-  );
-
-  // ──────────────────────────────────────────────────────────────────────
-  // TABLET LAYOUT — all letters at once
-  // ──────────────────────────────────────────────────────────────────────
-  if (isTablet) {
-    const tracerSize = Math.min(Math.floor((width - 48) / nameLetters.length) - 12, 200);
-
-    return (
-      <SafeAreaView style={styles.safe}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}><Text style={styles.backText}>← Back</Text></TouchableOpacity>
-          <Text style={styles.headerTitle}>Spell Names!</Text>
-          <View style={{ width: 60 }} />
-        </View>
-
-        <NameHeader />
-
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabletTracerRow}>
-          {nameLetters.map((letter, idx) => (
-            <View key={idx} style={styles.tabletLetterCard}>
-              <Text style={[
-                styles.tabletLetterLabel,
-                tabletCompleted.has(idx) && { color: '#4CAF50' },
-              ]}>
-                {tabletCompleted.has(idx) ? '✓' : letter}
-              </Text>
-              <LetterTracer
-                key={tabletKeys[idx]}
-                letter={letter}
-                size={tracerSize}
-                accentColor={tabletCompleted.has(idx) ? '#4CAF50' : ACCENT}
-                onComplete={(score) => handleTabletComplete(idx, score)}
-                onProgress={() => {}}
-                onTouchingChange={() => {}}
-              />
-            </View>
-          ))}
-        </ScrollView>
-
-        <FeedbackModal
-          visible={tabletModal}
-          success={tabletSuccess}
-          onNext={handleTabletNext}
-          onRetry={handleTabletRetry}
-          accentColor={ACCENT}
-        />
-      </SafeAreaView>
-    );
-  }
-
-  // ──────────────────────────────────────────────────────────────────────
-  // PHONE LAYOUT — one letter at a time
-  // ──────────────────────────────────────────────────────────────────────
-  const FIXED_H   = 52 + 120 + 36 + 60 + 16; // header + nameHeader + label + nav + padding
-  const available = height - FIXED_H;
-  const tracerSize = Math.floor(Math.min(width - 48, available));
-
-  const currentLetter = nameLetters[currentIdx];
+  // Portrait cards — 2 columns on phone, 4 on tablet
+  const cols      = isTablet ? 4 : 2;
+  const GAP       = 12;
+  const PADDING   = 16;
+  const cardWidth = Math.floor((width - PADDING * 2 - GAP * (cols - 1)) / cols);
+  const cardHeight = Math.floor(cardWidth * 1.35); // portrait ratio
 
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}><Text style={styles.backText}>← Back</Text></TouchableOpacity>
-        <Text style={styles.headerTitle}>Spell Names!</Text>
+        <TouchableOpacity onPress={() => router.back()}>
+          <Text style={styles.backText}>← Back</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Names</Text>
         <View style={{ width: 60 }} />
       </View>
 
-      <NameHeader activeLetterIdx={currentIdx} />
+      {familyMembers.length === 0 ? (
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyEmoji}>👨‍👩‍👧‍👦</Text>
+          <Text style={styles.emptyTitle}>No Family Members Yet</Text>
+          <Text style={styles.emptySubtitle}>
+            Ask a parent to add family members in Parent Setup → Names Setup.
+          </Text>
+        </View>
+      ) : (
+        <ScrollView contentContainerStyle={[styles.grid, { padding: PADDING, gap: GAP }]}>
+          {familyMembers.map((member) => (
+            <TouchableOpacity
+              key={member.id}
+              style={[styles.card, { width: cardWidth }]}
+              onPress={() => router.push(`/name/${member.id}`)}
+              activeOpacity={0.82}
+            >
+              {/* Portrait photo */}
+              {member.photoUri ? (
+                <Image
+                  source={{ uri: member.photoUri }}
+                  style={[
+                    styles.cardPhoto,
+                    {
+                      width: cardWidth,
+                      height: cardHeight,
+                      transform: [{ rotate: `${member.photoRotation}deg` }],
+                    },
+                  ]}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View style={[styles.cardPhotoPlaceholder, { width: cardWidth, height: cardHeight }]}>
+                  <Text style={styles.placeholderEmoji}>😊</Text>
+                </View>
+              )}
 
-      <Text style={[styles.traceLabel, { color: ACCENT }]}>
-        Trace the letter {currentLetter}!
-      </Text>
-
-      <View style={{ alignItems: 'center' }}>
-        <LetterTracer
-          key={tracerKeys[currentIdx]}
-          letter={currentLetter}
-          size={tracerSize}
-          accentColor={ACCENT}
-          onComplete={handleComplete}
-          onProgress={() => {}}
-          onTouchingChange={() => {}}
-        />
-      </View>
-
-      {/* Navigation dots */}
-      <View style={styles.dotsRow}>
-        {nameLetters.map((_, i) => (
-          <View
-            key={i}
-            style={[
-              styles.dot,
-              i === currentIdx && styles.dotActive,
-              completedSet.has(i) && styles.dotDone,
-            ]}
-          />
-        ))}
-      </View>
-
-      {/* Prev / Next */}
-      <View style={styles.navRow}>
-        <TouchableOpacity
-          style={[styles.navBtn, { opacity: currentIdx > 0 ? 1 : 0.3 }]}
-          onPress={() => setCurrentIdx(i => i - 1)}
-          disabled={currentIdx === 0}
-        >
-          <Text style={styles.navBtnText}>← Prev</Text>
-        </TouchableOpacity>
-        <Text style={styles.pageIndicator}>{currentIdx + 1} / {nameLetters.length}</Text>
-        <TouchableOpacity
-          style={[styles.navBtn, { opacity: currentIdx < nameLetters.length - 1 ? 1 : 0.3 }]}
-          onPress={() => setCurrentIdx(i => i + 1)}
-          disabled={currentIdx === nameLetters.length - 1}
-        >
-          <Text style={styles.navBtnText}>Next →</Text>
-        </TouchableOpacity>
-      </View>
-
-      <FeedbackModal
-        visible={modalVisible}
-        success={isSuccess}
-        onNext={handleNext}
-        onRetry={handleRetry}
-        accentColor={ACCENT}
-      />
+              {/* Name label at bottom of card */}
+              <View style={styles.cardLabel}>
+                <Text style={styles.cardName} numberOfLines={1}>{member.name}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
@@ -314,51 +100,46 @@ const styles = StyleSheet.create({
   backText:    { fontSize: 16, color: '#607D8B', fontWeight: '600' },
   headerTitle: { fontSize: 22, fontWeight: '900', color: ACCENT },
 
-  nameHeader: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 16, paddingVertical: 10,
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+
+  card: {
+    borderRadius: 18,
+    overflow: 'hidden',
     backgroundColor: '#FFF3FA',
-    borderBottomWidth: 1, borderBottomColor: '#F8BBD9',
-    minHeight: 80,
+    borderWidth: 2.5,
+    borderColor: ACCENT,
+    shadowColor: '#E91E8C',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  photoCircle: {
-    width: 64, height: 64, borderRadius: 32,
-    overflow: 'hidden', marginRight: 14,
-    borderWidth: 2.5, borderColor: ACCENT,
+  cardPhoto: { borderRadius: 0 },
+  cardPhotoPlaceholder: {
+    backgroundColor: '#FCE4EC',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  photoImg:         { width: 64, height: 64 },
-  photoPlaceholder: { backgroundColor: '#FCE4EC', alignItems: 'center', justifyContent: 'center' },
-  nameLettersRow:   { flexDirection: 'row', flexWrap: 'wrap', flex: 1, gap: 6 },
-  letterChip: {
-    width: 38, height: 44, borderRadius: 10, backgroundColor: '#FCE4EC',
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 2, borderColor: '#F48FB1',
+  placeholderEmoji: { fontSize: 56 },
+
+  cardLabel: {
+    backgroundColor: ACCENT,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    alignItems: 'center',
   },
-  letterChipActive: { backgroundColor: ACCENT, borderColor: ACCENT, transform: [{ scale: 1.15 }] },
-  letterChipDone:   { backgroundColor: '#4CAF50', borderColor: '#4CAF50' },
-  letterChipText:       { fontSize: 20, fontWeight: '900', color: ACCENT },
-  letterChipTextActive: { color: '#FFF' },
-  letterChipTextDone:   { color: '#FFF' },
+  cardName: {
+    color: '#FFF',
+    fontWeight: '900',
+    fontSize: 18,
+    letterSpacing: 1,
+  },
 
-  traceLabel: { fontSize: 18, fontWeight: '700', textAlign: 'center', marginVertical: 4 },
-
-  dotsRow: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: 8 },
-  dot:     { width: 10, height: 10, borderRadius: 5, backgroundColor: '#F8BBD9' },
-  dotActive:{ backgroundColor: ACCENT, transform: [{ scale: 1.3 }] },
-  dotDone: { backgroundColor: '#4CAF50' },
-
-  navRow:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 8, marginBottom: 4 },
-  navBtn:       { backgroundColor: ACCENT, paddingVertical: 8, paddingHorizontal: 18, borderRadius: 50 },
-  navBtnText:   { color: '#FFF', fontWeight: '700', fontSize: 15 },
-  pageIndicator:{ fontSize: 15, color: '#9E9E9E' },
-
-  emptyState:   { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
-  emptyEmoji:   { fontSize: 64, marginBottom: 16 },
-  emptyTitle:   { fontSize: 24, fontWeight: '800', color: '#37474F', marginBottom: 8 },
-  emptySubtitle:{ fontSize: 16, color: '#9E9E9E', textAlign: 'center' },
-
-  // Tablet styles
-  tabletTracerRow: { paddingHorizontal: 16, paddingVertical: 20, gap: 16, alignItems: 'flex-start' },
-  tabletLetterCard: { alignItems: 'center', gap: 8 },
-  tabletLetterLabel: { fontSize: 28, fontWeight: '900', color: ACCENT },
+  emptyState:    { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
+  emptyEmoji:    { fontSize: 64, marginBottom: 16 },
+  emptyTitle:    { fontSize: 24, fontWeight: '800', color: '#37474F', marginBottom: 8 },
+  emptySubtitle: { fontSize: 16, color: '#9E9E9E', textAlign: 'center', lineHeight: 24 },
 });

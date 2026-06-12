@@ -33,6 +33,14 @@ export interface StoryPageCustomization {
   customFaceSize2?: number;
 }
 
+// Family member for the Names spelling feature
+export interface FamilyMember {
+  id: string;
+  name: string;         // uppercase
+  photoUri: string;
+  photoRotation: number;
+}
+
 // Global story character (photo + name set once, used on all pages)
 export interface StoryCharacterCustomization {
   customName?: string;
@@ -67,9 +75,7 @@ interface AlphabetStore {
   // Per-page face positions: storyPagePositions[pageNum][characterKey]
   storyPagePositions: Record<string, Record<string, CharacterPagePosition>>;
   // ── Name Spelling ─────────────────────────────────────────────────────────
-  childName: string;
-  childNamePhotoUri: string;
-  childNamePhotoRotation: number;
+  familyMembers: FamilyMember[];
   // ── Settings ──────────────────────────────────────────────────────────────
   parentPin: string;
   // ── Actions ───────────────────────────────────────────────────────────────
@@ -87,7 +93,9 @@ interface AlphabetStore {
   setStoryCharacter: (key: string, data: Partial<StoryCharacterCustomization>) => Promise<void>;
   setStoryPagePosition: (page: number, characterKey: string, pos: CharacterPagePosition) => Promise<void>;
   clearStoryPagePosition: (page: number, characterKey: string) => Promise<void>;
-  setChildNameData: (name: string, photoUri: string, rotation: number) => Promise<void>;
+  addFamilyMember: (data: Omit<FamilyMember, 'id'>) => Promise<FamilyMember>;
+  updateFamilyMember: (id: string, data: Partial<Omit<FamilyMember, 'id'>>) => Promise<void>;
+  deleteFamilyMember: (id: string) => Promise<void>;
   loadFromStorage: () => Promise<void>;
 }
 
@@ -101,9 +109,7 @@ export const useAlphabetStore = create<AlphabetStore>((set, get) => ({
   storyAudioUris:      {},
   storyCharacters:     {},
   storyPagePositions:  {},
-  childName:           '',
-  childNamePhotoUri:   '',
-  childNamePhotoRotation: 0,
+  familyMembers:       [],
   parentPin:           '1234',
 
   setCustomization: async (letter, data) => {
@@ -203,21 +209,31 @@ export const useAlphabetStore = create<AlphabetStore>((set, get) => ({
     await AsyncStorage.setItem('storyPagePositions', JSON.stringify(updated));
   },
 
-  setChildNameData: async (name, photoUri, rotation) => {
-    set({ childName: name, childNamePhotoUri: photoUri, childNamePhotoRotation: rotation });
-    await AsyncStorage.multiSet([
-      ['childName', name],
-      ['childNamePhotoUri', photoUri],
-      ['childNamePhotoRotation', String(rotation)],
-    ]);
+  addFamilyMember: async (data) => {
+    const member: FamilyMember = { ...data, id: Date.now().toString() };
+    const updated = [...get().familyMembers, member];
+    set({ familyMembers: updated });
+    await AsyncStorage.setItem('familyMembers', JSON.stringify(updated));
+    return member;
+  },
+
+  updateFamilyMember: async (id, data) => {
+    const updated = get().familyMembers.map(m => m.id === id ? { ...m, ...data } : m);
+    set({ familyMembers: updated });
+    await AsyncStorage.setItem('familyMembers', JSON.stringify(updated));
+  },
+
+  deleteFamilyMember: async (id) => {
+    const updated = get().familyMembers.filter(m => m.id !== id);
+    set({ familyMembers: updated });
+    await AsyncStorage.setItem('familyMembers', JSON.stringify(updated));
   },
 
   loadFromStorage: async () => {
     const results = await AsyncStorage.multiGet([
       'customizations', 'isPremiumUnlocked', 'isNumbersUnlocked',
       'isStoryUnlocked', 'isNamesUnlocked', 'parentPin', 'storyCustomizations', 'storyAudioUris',
-      'storyCharacters', 'storyPagePositions',
-      'childName', 'childNamePhotoUri', 'childNamePhotoRotation',
+      'storyCharacters', 'storyPagePositions', 'familyMembers',
     ]);
     const m = Object.fromEntries(results.map(([k, v]) => [k, v]));
     set({
@@ -229,11 +245,9 @@ export const useAlphabetStore = create<AlphabetStore>((set, get) => ({
       parentPin:           m.parentPin            ?? '1234',
       storyCustomizations: m.storyCustomizations  ? JSON.parse(m.storyCustomizations) : {},
       storyAudioUris:      m.storyAudioUris       ? JSON.parse(m.storyAudioUris)      : {},
-      storyCharacters:        m.storyCharacters      ? JSON.parse(m.storyCharacters)     : {},
-      storyPagePositions:     m.storyPagePositions   ? JSON.parse(m.storyPagePositions)  : {},
-      childName:              m.childName            ?? '',
-      childNamePhotoUri:      m.childNamePhotoUri    ?? '',
-      childNamePhotoRotation: m.childNamePhotoRotation ? Number(m.childNamePhotoRotation) : 0,
+      storyCharacters:    m.storyCharacters    ? JSON.parse(m.storyCharacters)    : {},
+      storyPagePositions: m.storyPagePositions ? JSON.parse(m.storyPagePositions) : {},
+      familyMembers:      m.familyMembers      ? JSON.parse(m.familyMembers)      : [],
     });
   },
 }));
