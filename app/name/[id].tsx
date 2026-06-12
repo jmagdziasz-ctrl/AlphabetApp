@@ -72,6 +72,17 @@ export default function NameTraceScreen() {
     setTracerKeys(keys => keys.map(k => k + 1));
   };
 
+  // Skip advances without requiring a trace
+  const handleSkip = () => {
+    if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
+    setInlineFeedback(null);
+    if (currentIdx >= nameLetters.length - 1) {
+      setDoneModal(true);
+    } else {
+      setCurrentIdx(currentIdx + 1);
+    }
+  };
+
   // ── Tablet state — all letters at once ─────────────────────────────────
   const [tabletCompleted, setTabletCompleted] = useState<Set<number>>(new Set());
   const [tabletKeys,      setTabletKeys]      = useState<number[]>(() => nameLetters.map(() => 0));
@@ -248,7 +259,7 @@ export default function NameTraceScreen() {
       <View style={{ alignItems: 'center' }}>
         <View style={{ width: tracerSize, height: tracerSize }}>
           <LetterTracer
-            key={tracerKeys[currentIdx]}
+            key={`${currentIdx}-${tracerKeys[currentIdx]}`}
             letter={currentLetter}
             size={tracerSize}
             accentColor={inlineFeedback === 'retry' ? '#F44336' : ACCENT}
@@ -286,6 +297,13 @@ export default function NameTraceScreen() {
           />
         ))}
       </View>
+
+      {/* Skip button — only shown when not in feedback state */}
+      {!inlineFeedback && (
+        <TouchableOpacity style={styles.skipBtn} onPress={handleSkip}>
+          <Text style={styles.skipBtnText}>Skip →</Text>
+        </TouchableOpacity>
+      )}
 
       {/* Celebration modal — only shown when ALL letters are done */}
       <FeedbackModal
@@ -366,6 +384,9 @@ const styles = StyleSheet.create({
   dot:       { width: 10, height: 10, borderRadius: 5, backgroundColor: '#F8BBD9' },
   dotActive: { backgroundColor: ACCENT, transform: [{ scale: 1.3 }] },
   dotDone:   { backgroundColor: '#4CAF50' },
+
+  skipBtn:     { alignSelf: 'center', marginTop: 10, paddingVertical: 7, paddingHorizontal: 20, borderRadius: 20, borderWidth: 1.5, borderColor: '#BDBDBD' },
+  skipBtnText: { fontSize: 14, color: '#9E9E9E', fontWeight: '600' },
 
   // Tablet
   tabletTracerRow:  { paddingHorizontal: 16, paddingVertical: 20, gap: 16, alignItems: 'flex-start' },
