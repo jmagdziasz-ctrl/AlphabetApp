@@ -21,6 +21,8 @@ export default function LearnScreen() {
 
   const customizations    = useAlphabetStore(s => s.customizations);
   const isPremiumUnlocked = useAlphabetStore(s => s.isPremiumUnlocked);
+  const letterCase        = useAlphabetStore(s => s.letterCase);
+  const setLetterCase     = useAlphabetStore(s => s.setLetterCase);
 
   const letterIndex   = ALPHABET_DATA.findIndex(d => d.letter === letter);
   const letterData    = ALPHABET_DATA[letterIndex];
@@ -29,13 +31,14 @@ export default function LearnScreen() {
   const [progress, setProgress]       = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
   const [isSuccess, setIsSuccess]     = useState(false);
-  const [tracerKey, setTracerKey]     = useState(0);
-  const [isLowercase, setIsLowercase] = useState(false);
+  const [tracerKey, setTracerKey] = useState(0);
   const attemptsRef = useRef(0);
+
+  const isLowercase = letterCase === 'lower';
 
   const switchCase = (lowercase: boolean) => {
     if (lowercase === isLowercase) return;
-    setIsLowercase(lowercase);
+    setLetterCase(lowercase ? 'lower' : 'upper');
     setTracerKey(k => k + 1);
     setProgress(0);
   };
