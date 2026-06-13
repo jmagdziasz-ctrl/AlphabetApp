@@ -82,9 +82,10 @@ const TIERS = [
     emoji: '♾️',
     title: 'All Access',
     price: '$4.99',
-    priceNote: 'per month · cancel anytime',
-    desc: 'Everything unlocked — all 26 letters, all 10 numbers, and the full story book. One subscription covers it all.',
-    bullets: ['All 26 letters unlocked', 'Numbers 1–10 unlocked', '15-page story unlocked'],
+    priceNote: 'per month after free trial',
+    trial: '1 Week Free',
+    desc: 'Everything unlocked — all 26 letters, all 10 numbers, the full story book, and name spelling. One subscription covers it all.',
+    bullets: ['All 26 letters unlocked', 'Numbers 1–10 unlocked', '15-page story unlocked', 'Name spelling for the whole family', 'Cancel anytime — no charge during trial'],
     color: '#F57F17',
   },
 ];
@@ -198,10 +199,15 @@ export default function PaywallScreen() {
           const isLoading = loadingId === tier.id;
 
           return (
-            <View key={tier.id} style={[styles.tierCard, tier.highlight && styles.tierHighlight, { borderColor: tier.color }]}>
+            <View key={tier.id} style={[styles.tierCard, (tier.highlight || tier.trial) && styles.tierHighlight, { borderColor: tier.color }]}>
               {tier.highlight && (
                 <View style={[styles.bestValueBadge, { backgroundColor: tier.color }]}>
                   <Text style={styles.bestValueText}>BEST VALUE</Text>
+                </View>
+              )}
+              {tier.trial && (
+                <View style={[styles.bestValueBadge, { backgroundColor: tier.color }]}>
+                  <Text style={styles.bestValueText}>FREE TRIAL</Text>
                 </View>
               )}
 
@@ -218,6 +224,15 @@ export default function PaywallScreen() {
                   </View>
                 </View>
               </View>
+
+              {/* Free trial callout */}
+              {tier.trial && (
+                <View style={[styles.trialBanner, { backgroundColor: tier.color + '18', borderColor: tier.color + '44' }]}>
+                  <Text style={[styles.trialBannerText, { color: tier.color }]}>
+                    🎉 Try free for 1 week — then {tier.price}/month
+                  </Text>
+                </View>
+              )}
 
               {/* Description */}
               <Text style={styles.tierDesc}>{tier.desc}</Text>
@@ -241,7 +256,9 @@ export default function PaywallScreen() {
               >
                 {isLoading
                   ? <ActivityIndicator color="#FFF" />
-                  : <Text style={styles.buyBtnText}>Get {tier.title} — {tier.price}</Text>
+                  : <Text style={styles.buyBtnText}>
+                      {tier.trial ? `Start Free Trial — then ${tier.price}/mo` : `Get ${tier.title} — ${tier.price}`}
+                    </Text>
                 }
               </TouchableOpacity>
             </View>
@@ -259,10 +276,11 @@ export default function PaywallScreen() {
         <View style={styles.disclosureBox}>
           <Text style={styles.disclosureTitle}>All Access Subscription</Text>
           <Text style={styles.disclosureBody}>
-            • $4.99 / month{'\n'}
-            • Renews automatically each month{'\n'}
-            • Cancel anytime in App Store Settings{'\n'}
-            • Payment charged to Apple ID at confirmation{'\n'}
+            • 7-day free trial, then $4.99 / month{'\n'}
+            • No charge during the free trial period{'\n'}
+            • Renews automatically each month after trial{'\n'}
+            • Cancel anytime in App Store Settings before trial ends{'\n'}
+            • Payment charged to Apple ID at end of trial{'\n'}
             • Cancellation takes effect at end of billing period
           </Text>
           <View style={styles.linkRow}>
@@ -277,9 +295,10 @@ export default function PaywallScreen() {
         </View>
 
         <Text style={styles.legal}>
-          Payments are charged to your Apple ID at confirmation. One-time purchases never expire.
-          All Access subscription renews monthly at $4.99 unless cancelled at least 24 hours before renewal.
-          Manage subscriptions in App Store settings.
+          One-time purchases never expire. All Access includes a 7-day free trial — no charge until the
+          trial ends. After the trial, $4.99/month is charged to your Apple ID. Subscription renews
+          automatically unless cancelled at least 24 hours before the end of the current period.
+          Manage or cancel subscriptions in App Store settings.
         </Text>
 
       </ScrollView>
@@ -321,6 +340,13 @@ const styles = StyleSheet.create({
   priceRow:    { flexDirection: 'row', alignItems: 'baseline', marginTop: 2 },
   tierPrice:   { fontSize: 17, fontWeight: '800' },
   priceNote:   { fontSize: 12, color: '#9E9E9E', fontWeight: '500' },
+
+  trialBanner: {
+    borderRadius: 10, borderWidth: 1,
+    paddingVertical: 8, paddingHorizontal: 12,
+    marginBottom: 12, alignItems: 'center',
+  },
+  trialBannerText: { fontSize: 14, fontWeight: '800' },
 
   tierDesc: { fontSize: 14, color: '#607D8B', lineHeight: 20, marginBottom: 12 },
 
