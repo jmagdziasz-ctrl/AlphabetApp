@@ -41,7 +41,7 @@ const SECTIONS = [
 
 export default function SetupHomeScreen() {
   const router = useRouter();
-  const { parentPin, setParentPin, isPremiumUnlocked, isNumbersUnlocked, isStoryUnlocked, isNamesUnlocked, unlockPremium, unlockNumbers, unlockStory, unlockNames } = useAlphabetStore();
+  const { parentPin, setParentPin } = useAlphabetStore();
 
   const handleChangePin = () => {
     Alert.prompt('Current PIN', 'Enter your current PIN to continue', (current) => {
@@ -111,29 +111,6 @@ export default function SetupHomeScreen() {
           </TouchableOpacity>
         ))}
 
-        {/* Test Unlocks — for simulator testing only */}
-        <Text style={[styles.sectionTitle, { marginTop: 32 }]}>🧪 Test Unlocks</Text>
-        <Text style={styles.sectionSubtitle}>Simulate purchases without going through the App Store. For testing only.</Text>
-
-        <View style={styles.unlockGrid}>
-          {[
-            { label: 'ABC',   unlocked: isPremiumUnlocked,  action: unlockPremium,  color: '#FF6B35' },
-            { label: '123',   unlocked: isNumbersUnlocked,  action: unlockNumbers,  color: '#4CAF50' },
-            { label: 'Story', unlocked: isStoryUnlocked,    action: unlockStory,    color: '#7B1FA2' },
-            { label: 'Names', unlocked: isNamesUnlocked,    action: unlockNames,    color: '#E91E8C' },
-          ].map(({ label, unlocked, action, color }) => (
-            <TouchableOpacity
-              key={label}
-              style={[styles.unlockBtn, { borderColor: color, backgroundColor: unlocked ? color : '#FFF' }]}
-              onPress={() => !unlocked && action()}
-            >
-              <Text style={[styles.unlockBtnText, { color: unlocked ? '#FFF' : color }]}>
-                {unlocked ? '✓ ' : ''}{label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
         {/* Version number */}
         <Text style={styles.versionText}>
           Version {Constants.expoConfig?.version ?? '—'} ({Constants.expoConfig?.ios?.buildNumber ?? '—'})
@@ -176,11 +153,4 @@ const styles = StyleSheet.create({
   sectionArrow: { fontSize: 28, color: '#BDBDBD', marginLeft: 8 },
   versionText:  { textAlign: 'center', color: '#BDBDBD', fontSize: 12, marginTop: 28 },
 
-  unlockGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 8 },
-  unlockBtn: {
-    flex: 1, minWidth: '40%', paddingVertical: 12,
-    borderRadius: 12, borderWidth: 2,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  unlockBtnText: { fontSize: 15, fontWeight: '800' },
 });

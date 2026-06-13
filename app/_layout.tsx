@@ -53,6 +53,11 @@ export default function RootLayout() {
       <Stack.Screen name="setup/story/[page]" />
       <Stack.Screen name="numbers/index" />
       <Stack.Screen name="numbers/[number]" />
+      <Stack.Screen name="name/index" />
+      {/* detachPreviousScreen removes name/index from the native view hierarchy while
+          name/[id] is active — prevents the list screen's ScrollView from rubber-banding
+          behind the tracing screen when the child drags on the LetterTracer. */}
+      <Stack.Screen name="name/[id]" options={{ detachPreviousScreen: true }} />
       <Stack.Screen name="story/index" />
       <Stack.Screen name="story/[page]" />
       <Stack.Screen name="story/setup/[page]" />

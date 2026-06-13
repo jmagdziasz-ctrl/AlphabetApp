@@ -8,9 +8,74 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAlphabetStore } from '@/store/alphabetStore';
 import { LetterTracer } from '@/components/LetterTracer';
 import { FeedbackModal } from '@/components/FeedbackModal';
+import { FamilyMember } from '@/store/alphabetStore';
 
 const ACCENT = '#E91E8C';
 
+// ── NameHeader — defined OUTSIDE the screen so React never remounts it on re-render ──
+interface NameHeaderProps {
+  member: FamilyMember;
+  displayChars: string[];
+  photoW: number;
+  photoH: number;
+  activeLetterIdx?: number;
+  completedSet: Set<number>;
+}
+
+function NameHeader({ member, displayChars, photoW, photoH, activeLetterIdx, completedSet }: NameHeaderProps) {
+  return (
+    <View style={[styles.nameHeader, { minHeight: photoH + 24 }]}>
+      {/* Portrait photo card — fixed size prevents any height jitter */}
+      <View style={[styles.photoCard, { width: photoW, height: photoH }]}>
+        {member.photoUri ? (
+          <Image
+            source={{ uri: member.photoUri }}
+            style={[
+              styles.photoImg,
+              { width: photoW, height: photoH, transform: [{ rotate: `${member.photoRotation}deg` }] },
+            ]}
+            resizeMode="cover"
+          />
+        ) : (
+          <View style={[styles.photoPlaceholder, { width: photoW, height: photoH }]}>
+            <Text style={{ fontSize: 40 }}>😊</Text>
+          </View>
+        )}
+      </View>
+
+      {/* Name + letter chips */}
+      <View style={styles.nameRightCol}>
+        <Text style={styles.memberNameLabel}>{member.name}</Text>
+        <View style={styles.nameLettersRow}>
+          {displayChars.map((c, i) => {
+            if (c === ' ') return <View key={i} style={{ width: 8 }} />;
+            const lettersBefore = displayChars.slice(0, i).filter(x => /[A-Z]/.test(x)).length;
+            const isActive    = activeLetterIdx === lettersBefore;
+            const isCompleted = completedSet.has(lettersBefore);
+            return (
+              <View
+                key={i}
+                style={[
+                  styles.letterChip,
+                  isActive    && styles.letterChipActive,
+                  isCompleted && styles.letterChipDone,
+                ]}
+              >
+                <Text style={[
+                  styles.letterChipText,
+                  isActive    && styles.letterChipTextActive,
+                  isCompleted && styles.letterChipTextDone,
+                ]}>{c}</Text>
+              </View>
+            );
+          })}
+        </View>
+      </View>
+    </View>
+  );
+}
+
+// ── Main screen ───────────────────────────────────────────────────────────────
 export default function NameTraceScreen() {
   const { id }  = useLocalSearchParams<{ id: string }>();
   const router  = useRouter();
@@ -32,8 +97,6 @@ export default function NameTraceScreen() {
   const [currentIdx,    setCurrentIdx]    = useState(0);
   const [completedSet,  setCompletedSet]  = useState<Set<number>>(new Set());
   const [tracerKeys,    setTracerKeys]    = useState<number[]>(() => nameLetters.map(() => 0));
-  // 'success' = brief green flash before auto-advancing
-  // 'retry'   = brief red flash before auto-resetting
   const [inlineFeedback, setInlineFeedback] = useState<'success' | 'retry' | null>(null);
   const [doneModal,      setDoneModal]      = useState(false);
   const feedbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -44,20 +107,16 @@ export default function NameTraceScreen() {
     setInlineFeedback(success ? 'success' : 'retry');
 
     if (success) {
-      // Mark current letter complete immediately (so chip turns green)
       setCompletedSet(prev => new Set(prev).add(currentIdx));
-
       feedbackTimer.current = setTimeout(() => {
         setInlineFeedback(null);
         if (currentIdx >= nameLetters.length - 1) {
-          // Last letter — celebrate the whole name!
           setDoneModal(true);
         } else {
           setCurrentIdx(currentIdx + 1);
         }
       }, 700);
     } else {
-      // Failed — reset this tracer after a short pause
       feedbackTimer.current = setTimeout(() => {
         setInlineFeedback(null);
         setTracerKeys(keys => keys.map((k, i) => i === currentIdx ? k + 1 : k));
@@ -72,7 +131,6 @@ export default function NameTraceScreen() {
     setTracerKeys(keys => keys.map(k => k + 1));
   };
 
-  // Skip advances without requiring a trace
   const handleSkip = () => {
     if (feedbackTimer.current) clearTimeout(feedbackTimer.current);
     setInlineFeedback(null);
@@ -83,7 +141,7 @@ export default function NameTraceScreen() {
     }
   };
 
-  // ── Tablet state — all letters at once ─────────────────────────────────
+  // ── Tablet state ────────────────────────────────────────────────────────
   const [tabletCompleted, setTabletCompleted] = useState<Set<number>>(new Set());
   const [tabletKeys,      setTabletKeys]      = useState<number[]>(() => nameLetters.map(() => 0));
   const [tabletModal,     setTabletModal]     = useState(false);
@@ -125,64 +183,9 @@ export default function NameTraceScreen() {
   if (!member) return null;
 
   // ── Photo dimensions ────────────────────────────────────────────────────
-  // Portrait card: wider than before, shorter height to leave room for tracer
-  const PHOTO_W   = Math.min(Math.floor(width * 0.38), 160);
-  const PHOTO_H   = Math.floor(PHOTO_W * 1.3);
-  const HEADER_H  = PHOTO_H + 24; // photo + vertical padding
-
-  // ── Letter chips header ─────────────────────────────────────────────────
-  const NameHeader = ({ activeLetterIdx }: { activeLetterIdx?: number }) => (
-    <View style={styles.nameHeader}>
-      {/* Portrait photo card */}
-      <View style={[styles.photoCard, { width: PHOTO_W, height: PHOTO_H }]}>
-        {member.photoUri ? (
-          <Image
-            source={{ uri: member.photoUri }}
-            style={[
-              styles.photoImg,
-              { width: PHOTO_W, height: PHOTO_H, transform: [{ rotate: `${member.photoRotation}deg` }] },
-            ]}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={[styles.photoPlaceholder, { width: PHOTO_W, height: PHOTO_H }]}>
-            <Text style={{ fontSize: 40 }}>😊</Text>
-          </View>
-        )}
-      </View>
-
-      {/* Name + letter chips */}
-      <View style={styles.nameRightCol}>
-        <Text style={styles.memberNameLabel}>{member.name}</Text>
-        <View style={styles.nameLettersRow}>
-          {displayChars.map((c, i) => {
-            if (c === ' ') return <View key={i} style={{ width: 8 }} />;
-            const lettersBefore = displayChars.slice(0, i).filter(x => /[A-Z]/.test(x)).length;
-            const isActive    = activeLetterIdx === lettersBefore;
-            const isCompleted = isTablet
-              ? tabletCompleted.has(lettersBefore)
-              : completedSet.has(lettersBefore);
-            return (
-              <View
-                key={i}
-                style={[
-                  styles.letterChip,
-                  isActive    && styles.letterChipActive,
-                  isCompleted && styles.letterChipDone,
-                ]}
-              >
-                <Text style={[
-                  styles.letterChipText,
-                  isActive    && styles.letterChipTextActive,
-                  isCompleted && styles.letterChipTextDone,
-                ]}>{c}</Text>
-              </View>
-            );
-          })}
-        </View>
-      </View>
-    </View>
-  );
+  const PHOTO_W  = Math.min(Math.floor(width * 0.38), 160);
+  const PHOTO_H  = Math.floor(PHOTO_W * 1.3);
+  const HEADER_H = PHOTO_H + 24; // photo + vertical padding (12 top + 12 bottom)
 
   // ──────────────────────────────────────────────────────────────────────
   // TABLET LAYOUT
@@ -199,7 +202,13 @@ export default function NameTraceScreen() {
           <View style={{ width: 60 }} />
         </View>
 
-        <NameHeader />
+        <NameHeader
+          member={member}
+          displayChars={displayChars}
+          photoW={PHOTO_W}
+          photoH={PHOTO_H}
+          completedSet={tabletCompleted}
+        />
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabletTracerRow}>
           {nameLetters.map((letter, idx) => (
@@ -234,13 +243,21 @@ export default function NameTraceScreen() {
   // ──────────────────────────────────────────────────────────────────────
   // PHONE LAYOUT
   // ──────────────────────────────────────────────────────────────────────
-  const FIXED_H    = 52 + HEADER_H + 36 + 28 + 16; // header+photo+label+dots+padding
-  const available  = height - FIXED_H;
-  const tracerSize = Math.floor(Math.min(width - 48, available));
+  // SKIP_H is always reserved so nothing shifts when skip appears/disappears.
+  // tracerSizeRef: computed ONCE and frozen. Re-renders (from any source) can
+  // never change the tracer size mid-trace, preventing dots from shifting.
+  const SKIP_H = 44;
+  const FIXED_H = 52 + HEADER_H + 32 + 28 + SKIP_H + 12;
+  const tracerSizeRef = useRef<number | null>(null);
+  if (tracerSizeRef.current === null) {
+    tracerSizeRef.current = Math.max(120, Math.floor(Math.min(width - 48, height - FIXED_H)));
+  }
+  const tracerSize = tracerSizeRef.current;
   const currentLetter = nameLetters[currentIdx];
 
   return (
     <SafeAreaView style={styles.safe}>
+
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <Text style={styles.backText}>← Back</Text>
@@ -249,14 +266,21 @@ export default function NameTraceScreen() {
         <View style={{ width: 60 }} />
       </View>
 
-      <NameHeader activeLetterIdx={currentIdx} />
+      <NameHeader
+        member={member}
+        displayChars={displayChars}
+        photoW={PHOTO_W}
+        photoH={PHOTO_H}
+        activeLetterIdx={currentIdx}
+        completedSet={completedSet}
+      />
 
       <Text style={[styles.traceLabel, { color: ACCENT }]}>
         Trace the letter {currentLetter}!
       </Text>
 
-      {/* Tracer with inline feedback overlay — no modal between letters */}
-      <View style={{ alignItems: 'center' }}>
+      {/* Tracer with inline feedback overlay */}
+      <View style={styles.tracerWrapper}>
         <View style={{ width: tracerSize, height: tracerSize }}>
           <LetterTracer
             key={`${currentIdx}-${tracerKeys[currentIdx]}`}
@@ -298,12 +322,14 @@ export default function NameTraceScreen() {
         ))}
       </View>
 
-      {/* Skip button — only shown when not in feedback state */}
-      {!inlineFeedback && (
-        <TouchableOpacity style={styles.skipBtn} onPress={handleSkip}>
-          <Text style={styles.skipBtnText}>Skip →</Text>
-        </TouchableOpacity>
-      )}
+      {/* Skip button — always reserves its height so nothing shifts */}
+      <View style={styles.skipArea}>
+        {!inlineFeedback && (
+          <TouchableOpacity style={styles.skipBtn} onPress={handleSkip}>
+            <Text style={styles.skipBtnText}>Skip →</Text>
+          </TouchableOpacity>
+        )}
+      </View>
 
       {/* Celebration modal — only shown when ALL letters are done */}
       <FeedbackModal
@@ -327,7 +353,7 @@ const styles = StyleSheet.create({
   backText:    { fontSize: 16, color: '#607D8B', fontWeight: '600' },
   headerTitle: { fontSize: 20, fontWeight: '900', color: ACCENT },
 
-  // ── Photo + chips header ────────────────────────────────────────────────
+  // ── Photo + chips header ───────────────────────────────────────────────
   nameHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -367,7 +393,8 @@ const styles = StyleSheet.create({
   letterChipTextActive: { color: '#FFF' },
   letterChipTextDone:   { color: '#FFF' },
 
-  traceLabel: { fontSize: 18, fontWeight: '700', textAlign: 'center', marginVertical: 4 },
+  traceLabel:    { fontSize: 18, fontWeight: '700', textAlign: 'center', marginVertical: 4 },
+  tracerWrapper: { alignItems: 'center' },
 
   feedbackOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -385,7 +412,9 @@ const styles = StyleSheet.create({
   dotActive: { backgroundColor: ACCENT, transform: [{ scale: 1.3 }] },
   dotDone:   { backgroundColor: '#4CAF50' },
 
-  skipBtn:     { alignSelf: 'center', marginTop: 10, paddingVertical: 7, paddingHorizontal: 20, borderRadius: 20, borderWidth: 1.5, borderColor: '#BDBDBD' },
+  // Always takes 44 px so skip appearing/disappearing never shifts the tracer
+  skipArea: { height: 44, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
+  skipBtn:     { paddingVertical: 7, paddingHorizontal: 20, borderRadius: 20, borderWidth: 1.5, borderColor: '#BDBDBD' },
   skipBtnText: { fontSize: 14, color: '#9E9E9E', fontWeight: '600' },
 
   // Tablet

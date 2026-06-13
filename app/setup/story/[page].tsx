@@ -10,6 +10,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { STORY_DATA, STORY_CHARACTERS, StoryCharacterDef } from '@/constants/storyData';
 import { useAlphabetStore, StoryCharacterCustomization } from '@/store/alphabetStore';
 
+// Story images are 1200×896 px (landscape). Compute the rendered rect inside a
+// resizeMode="contain" container so face circles land on the image, not the black bars.
+const IMG_RATIO = 1200 / 896;
+function getRenderedRect(screenW: number, screenH: number) {
+  const containerRatio = screenW / screenH;
+  let rW: number, rH: number;
+  if (containerRatio > IMG_RATIO) {
+    rH = screenH; rW = screenH * IMG_RATIO;
+  } else {
+    rW = screenW; rH = screenW / IMG_RATIO;
+  }
+  return { rW, rH, rX: (screenW - rW) / 2, rY: (screenH - rH) / 2 };
+}
+
 // ── Draggable circle component ────────────────────────────────────────────────
 function DraggableCircle({
   charKey, def, custom, pos, screenWidth, screenHeight,
@@ -40,10 +54,12 @@ function DraggableCircle({
         startPos.current = { top: posRef.current.top, left: posRef.current.left };
       },
       onPanResponderMove: (_, { dx, dy }) => {
+        // Convert pixel delta → fraction of RENDERED image rect (not full screen)
+        const { rW, rH } = getRenderedRect(swRef.current, shRef.current);
         onMoveRef.current(
           charKey,
-          Math.max(0, Math.min(1.2, startPos.current.top  + dy / shRef.current)),
-          Math.max(0, Math.min(1,   startPos.current.left + dx / swRef.current)),
+          Math.max(0, Math.min(1.2, startPos.current.top  + dy / rH)),
+          Math.max(0, Math.min(1,   startPos.current.left + dx / rW)),
         );
       },
     })
@@ -52,13 +68,14 @@ function DraggableCircle({
   const imageUri    = custom?.customImageUri;
   const displayName = custom?.customName ?? def.defaultName;
 
+  const { rW, rH, rX, rY } = getRenderedRect(screenWidth, screenHeight);
   return (
     <View
       {...panResponder.panHandlers}
       style={{
         position: 'absolute',
-        top:  pos.top  * screenHeight - pos.size / 2,
-        left: pos.left * screenWidth  - pos.size / 2,
+        top:  rY + pos.top  * rH - pos.size / 2,
+        left: rX + pos.left * rW - pos.size / 2,
         width: pos.size, height: pos.size,
         borderRadius: pos.size / 2,
         overflow: 'hidden',

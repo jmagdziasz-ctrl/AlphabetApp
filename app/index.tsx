@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   subtitle: { fontSize: 13, color: '#9E9E9E', marginTop: 2 },
-  sectionRow: { flexDirection: 'row', gap: 8, marginTop: 6 },
+  sectionRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8, marginTop: 6 },
   sectionBtn: { paddingVertical: 7, paddingHorizontal: 14, borderRadius: 20 },
   sectionBtnText: { color: '#FFF', fontSize: 14, fontWeight: '800' },
 

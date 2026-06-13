@@ -273,36 +273,57 @@ export default function StoryPageScreen() {
         </View>
       )}
 
-      {/* Character face overlays */}
-      {(pageData.characterPositions ?? []).map((cp) => {
-        const charDef  = STORY_CHARACTERS.find(c => c.key === cp.characterKey);
-        if (!charDef) return null;
-        const custom   = storyCharacters[cp.characterKey];
-        const imageUri = custom?.customImageUri;
-        if (!imageUri) return null;
-        const stored = storyPagePositions[String(pageNum)]?.[cp.characterKey];
-        const top    = stored?.top  ?? cp.defaultTop;
-        const left   = stored?.left ?? cp.defaultLeft;
-        const size   = stored?.size ?? cp.defaultSize;
-        return (
-          <View
-            key={cp.characterKey}
-            style={{
-              position: 'absolute',
-              top: top * height - size / 2,
-              left: left * width - size / 2,
-              width: size, height: size,
-              borderRadius: size / 2,
-              overflow: 'hidden',
-            }}
-          >
-            <Image
-              source={{ uri: imageUri }}
-              style={{ width: size, height: size, transform: [{ rotate: `${custom?.customImageRotation ?? 0}deg` }] }}
-            />
-          </View>
-        );
-      })}
+      {/* Character face overlays
+          Story images are 1200×896 px (landscape) displayed with resizeMode="contain".
+          We must compute the actual rendered image rect to position faces correctly on
+          all screen sizes (especially iPad, which letterboxes more than phone). */}
+      {(() => {
+        const IMG_W = 1200, IMG_H = 896;
+        const IMG_RATIO = IMG_W / IMG_H;
+        const containerRatio = width / height;
+        let renderedW: number, renderedH: number, renderedX: number, renderedY: number;
+        if (containerRatio > IMG_RATIO) {
+          // Container wider → pillarboxed (bars left/right)
+          renderedH = height;
+          renderedW = height * IMG_RATIO;
+        } else {
+          // Container taller → letterboxed (bars top/bottom)
+          renderedW = width;
+          renderedH = width / IMG_RATIO;
+        }
+        renderedX = (width  - renderedW) / 2;
+        renderedY = (height - renderedH) / 2;
+
+        return (pageData.characterPositions ?? []).map((cp) => {
+          const charDef  = STORY_CHARACTERS.find(c => c.key === cp.characterKey);
+          if (!charDef) return null;
+          const custom   = storyCharacters[cp.characterKey];
+          const imageUri = custom?.customImageUri;
+          if (!imageUri) return null;
+          const stored = storyPagePositions[String(pageNum)]?.[cp.characterKey];
+          const top    = stored?.top  ?? cp.defaultTop;
+          const left   = stored?.left ?? cp.defaultLeft;
+          const size   = stored?.size ?? cp.defaultSize;
+          return (
+            <View
+              key={cp.characterKey}
+              style={{
+                position: 'absolute',
+                top:  renderedY + top  * renderedH - size / 2,
+                left: renderedX + left * renderedW - size / 2,
+                width: size, height: size,
+                borderRadius: size / 2,
+                overflow: 'hidden',
+              }}
+            >
+              <Image
+                source={{ uri: imageUri }}
+                style={{ width: size, height: size, transform: [{ rotate: `${custom?.customImageRotation ?? 0}deg` }] }}
+              />
+            </View>
+          );
+        });
+      })()}
 
       {/* ── Floating overlay controls ── */}
       <SafeAreaView style={StyleSheet.absoluteFill} pointerEvents="box-none">

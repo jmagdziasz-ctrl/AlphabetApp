@@ -14,7 +14,7 @@ interface Props {
 
 // How long (ms) to wait after the finger lifts before deciding the tracing is done.
 // This lets the child reposition and keep going without being cut off early.
-const FINISH_DELAY_MS = 2000;
+const FINISH_DELAY_MS = 3500;
 
 // ── Y-normalisation ────────────────────────────────────────────────────────────
 // Letter coordinates are defined on a 0-100 grid.  Most letters bottom out at
