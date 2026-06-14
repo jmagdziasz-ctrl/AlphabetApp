@@ -10,6 +10,46 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { STORY_DATA, STORY_CHARACTERS, StoryCharacterDef } from '@/constants/storyData';
 import { useAlphabetStore, StoryCharacterCustomization } from '@/store/alphabetStore';
 
+function personalizeText(
+  raw: string,
+  storyCharacters: Record<string, StoryCharacterCustomization>,
+): string {
+  let text = raw;
+  for (const char of STORY_CHARACTERS) {
+    const customName = storyCharacters[char.key]?.customName?.trim();
+    if (customName && customName !== char.defaultName) {
+      const escaped = char.defaultName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      text = text.replace(new RegExp(escaped, 'g'), customName);
+    }
+  }
+  return text;
+}
+
+// Voice-optimised recording preset: mono 22 kHz 48 kbps — sounds identical to
+// HIGH_QUALITY for speech but produces files ~4× smaller.
+const VOICE_RECORDING_OPTIONS: Audio.RecordingOptions = {
+  android: {
+    extension: '.m4a',
+    outputFormat: Audio.AndroidOutputFormat.MPEG_4,
+    audioEncoder: Audio.AndroidAudioEncoder.AAC,
+    sampleRate: 22050,
+    numberOfChannels: 1,
+    bitRate: 48000,
+  },
+  ios: {
+    extension: '.m4a',
+    outputFormat: Audio.IOSOutputFormat.MPEG4AAC,
+    audioQuality: Audio.IOSAudioQuality.MEDIUM,
+    sampleRate: 22050,
+    numberOfChannels: 1,
+    bitRate: 48000,
+    linearPCMBitDepth: 16,
+    linearPCMIsBigEndian: false,
+    linearPCMIsFloat: false,
+  },
+  web: { mimeType: 'audio/webm', bitsPerSecond: 48000 },
+};
+
 // Story images are 1200×896 px (landscape). Compute the rendered rect inside a
 // resizeMode="contain" container so face circles land on the image, not the black bars.
 const IMG_RATIO = 1200 / 896;
@@ -163,7 +203,7 @@ export default function SetupStoryPage() {
       const { status } = await Audio.requestPermissionsAsync();
       if (status !== 'granted') { Alert.alert('Permission needed', 'Please allow microphone access.'); return; }
       await Audio.setAudioModeAsync({ allowsRecordingIOS: true, playsInSilentModeIOS: true });
-      const { recording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
+      const { recording } = await Audio.Recording.createAsync(VOICE_RECORDING_OPTIONS);
       recordingRef.current = recording;
       setIsRecording(true);
     } catch { Alert.alert('Error', 'Could not start recording.'); }
@@ -218,7 +258,7 @@ export default function SetupStoryPage() {
         <Image source={pageData.image} style={{ width, height }} resizeMode="contain" />
       ) : (
         <View style={[styles.endPage, { backgroundColor: pageData.bgColor, width, height }]}>
-          <Text style={[styles.endText, { color: pageData.accentColor }]}>{pageData.text}</Text>
+          <Text style={[styles.endText, { color: pageData.accentColor }]}>{personalizeText(pageData.text, storyCharacters)}</Text>
         </View>
       )}
 
@@ -257,7 +297,7 @@ export default function SetupStoryPage() {
 
           {/* Story text */}
           <ScrollView style={styles.textScroll} pointerEvents="auto">
-            <Text style={styles.storyText}>{pageData.text}</Text>
+            <Text style={styles.storyText}>{personalizeText(pageData.text, storyCharacters)}</Text>
           </ScrollView>
 
           {/* Recording controls */}

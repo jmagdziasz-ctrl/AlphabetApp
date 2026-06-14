@@ -8,7 +8,24 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Audio } from 'expo-av';
 import * as Speech from 'expo-speech';
 import { STORY_DATA, STORY_CHARACTERS } from '@/constants/storyData';
-import { useAlphabetStore } from '@/store/alphabetStore';
+import { useAlphabetStore, StoryCharacterCustomization } from '@/store/alphabetStore';
+
+// Replace default character names with any custom names the parent has set.
+// Applied to displayed text and TTS — recorded audio plays unchanged.
+function personalizeText(
+  raw: string,
+  storyCharacters: Record<string, StoryCharacterCustomization>,
+): string {
+  let text = raw;
+  for (const char of STORY_CHARACTERS) {
+    const customName = storyCharacters[char.key]?.customName?.trim();
+    if (customName && customName !== char.defaultName) {
+      const escaped = char.defaultName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      text = text.replace(new RegExp(escaped, 'g'), customName);
+    }
+  }
+  return text;
+}
 
 // ── Whisper word-timing data (exact timestamps from transcription) ───────────
 const TIMING: Record<number, { word: string; start: number; end: number }[]> = {
@@ -96,7 +113,12 @@ export default function StoryPageScreen() {
   // Parent recording takes priority; fall back to bundled narrator MP3
   const audioUri     = storyAudioUris[pageNum] ?? storyAudioUris[String(pageNum) as any];
   const bundledAudio = BUNDLED_AUDIO[pageNum];
-  const words        = (pageData?.text ?? '').split(/\s+/).filter(Boolean);
+
+  // Swap in custom character names for display and TTS.
+  // Note: pre-recorded audio (parent or bundled) plays unchanged — the parent
+  // should re-record any page after renaming characters.
+  const displayText  = personalizeText(pageData?.text ?? '', storyCharacters);
+  const words        = displayText.split(/\s+/).filter(Boolean);
   const hasText      = words.length > 0;
 
   // Exact Whisper timestamps for bundled audio (null for parent recordings)
@@ -214,10 +236,10 @@ export default function StoryPageScreen() {
 
     // Wait for the primer to activate the audio session before speaking
     setTimeout(() => {
-      Speech.speak(pageData.text ?? '', {
+      Speech.speak(displayText, {
         language: 'en-US',
-        rate: 0.85,
-        pitch: 1.1,
+        rate: 0.82,
+        pitch: 1.0,
         onDone: () => {
           if (ttsTimerRef.current) { clearTimeout(ttsTimerRef.current); ttsTimerRef.current = null; }
           setActiveWordIdx(-1);
