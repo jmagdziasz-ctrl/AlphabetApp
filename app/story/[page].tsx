@@ -61,7 +61,7 @@ export default function StoryPageScreen() {
   // Parent recording only — everything else uses TTS so names are always correct.
   const audioUri = storyAudioUris[pageNum] ?? storyAudioUris[String(pageNum) as any];
 
-  // Personalise text: swap in custom character names for display and TTS.
+  // Personalize text: swap in custom character names for display and TTS.
   // Parent recordings play unchanged — re-record after renaming characters.
   const displayText = personalizeText(pageData?.text ?? '', storyCharacters);
   const words       = displayText.split(/\s+/).filter(Boolean);

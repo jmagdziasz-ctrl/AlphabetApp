@@ -82,7 +82,7 @@ export default function SetupHomeScreen() {
         <View style={styles.infoCard}>
           <Text style={styles.infoCardTitle}>👋 Welcome to Parent Setup</Text>
           <Text style={styles.infoCardBody}>
-            Everything here is hidden from little ones behind your PIN. Use the sections below to personalise the app with real family names and photos — your child will see the people they love on every screen.
+            Everything here is hidden from little ones behind your PIN. Use the sections below to personalize the app with real family names and photos — your child will see the people they love on every screen.
           </Text>
         </View>
 
