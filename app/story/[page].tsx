@@ -112,17 +112,24 @@ export default function StoryPageScreen() {
 
   // Parent recording takes priority; fall back to bundled narrator MP3
   const audioUri     = storyAudioUris[pageNum] ?? storyAudioUris[String(pageNum) as any];
-  const bundledAudio = BUNDLED_AUDIO[pageNum];
 
   // Swap in custom character names for display and TTS.
-  // Note: pre-recorded audio (parent or bundled) plays unchanged — the parent
-  // should re-record any page after renaming characters.
+  // Note: parent recordings play unchanged — re-record after renaming characters.
   const displayText  = personalizeText(pageData?.text ?? '', storyCharacters);
   const words        = displayText.split(/\s+/).filter(Boolean);
   const hasText      = words.length > 0;
 
-  // Exact Whisper timestamps for bundled audio (null for parent recordings)
-  const timingWords = TIMING[pageNum] ?? null;
+  // If any character has a custom name the bundled audio will say the wrong name.
+  // In that case skip the bundled MP3 and fall through to TTS, which reads
+  // displayText (already personalised). Parent recordings always take priority.
+  const hasCustomNames = STORY_CHARACTERS.some(char => {
+    const custom = storyCharacters[char.key]?.customName?.trim();
+    return !!custom && custom !== char.defaultName;
+  });
+  const bundledAudio = hasCustomNames ? undefined : BUNDLED_AUDIO[pageNum];
+
+  // Exact Whisper timestamps for bundled audio (null when TTS is used)
+  const timingWords = bundledAudio ? (TIMING[pageNum] ?? null) : null;
 
   // ── Clean up everything when page changes or unmounts ──────────────────
   useEffect(() => {
