@@ -26,10 +26,16 @@ export default function SetupStoryIndexScreen() {
         <View style={styles.infoCard}>
           <Text style={styles.infoCardTitle}>📖 How Story Setup works</Text>
           <Text style={styles.infoCardBody}>
-            You can personalise two things for each story page:{'\n'}
+            You can personalise each story page in two ways:{'\n'}
             {'  '}• Record your own voice reading the page aloud — your child hears you instead of the default TTS voice{'\n'}
-            {'  '}• Drag the character face circles to match where they appear on the illustration{'\n\n'}
-            The full story text is shown on each page so you always know exactly what to read.
+            {'  '}• Position character face circles so they land on the right person in each illustration{'\n\n'}
+            To personalise with real family photos:{'\n'}
+            {'  '}1. Tap "Manage Characters & Photos" below and add a photo for each character{'\n'}
+            {'  '}2. Then open each story page to check the photo placement{'\n'}
+            {'  '}3. Drag the face circles to the correct position on the illustration{'\n'}
+            {'  '}4. Use the + / − buttons at the bottom of the page to resize each circle{'\n'}
+            {'  '}5. Tap Save when the page looks right{'\n\n'}
+            The full story text is shown on every page so you always know exactly what to read.
           </Text>
         </View>
 
