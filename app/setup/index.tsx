@@ -41,7 +41,7 @@ const SECTIONS = [
 
 export default function SetupHomeScreen() {
   const router = useRouter();
-  const { parentPin, setParentPin, unlockStory } = useAlphabetStore();
+  const { parentPin, setParentPin } = useAlphabetStore();
 
   const handleChangePin = () => {
     Alert.prompt('Current PIN', 'Enter your current PIN to continue', (current) => {
@@ -119,13 +119,6 @@ export default function SetupHomeScreen() {
           </TouchableOpacity>
         ))}
 
-        {/* 🧪 Dev / test unlocks — remove before App Store submission */}
-        <Text style={[styles.sectionTitle, { marginTop: 32, color: '#9E9E9E' }]}>🧪 Testing</Text>
-        <Text style={styles.sectionSubtitle}>Unlock features locally for Expo Go testing.</Text>
-        <TouchableOpacity style={styles.testBtn} onPress={async () => { await unlockStory(); Alert.alert('Unlocked', 'Story is now unlocked.'); }}>
-          <Text style={styles.testBtnText}>📖 Unlock Story</Text>
-        </TouchableOpacity>
-
         {/* Version number */}
         <Text style={styles.versionText}>
           Version {Constants.expoConfig?.version ?? '—'} ({Constants.expoConfig?.ios?.buildNumber ?? '—'})
@@ -166,12 +159,6 @@ const styles = StyleSheet.create({
   sectionCardTitle:    { fontSize: 18, fontWeight: '800', marginBottom: 3 },
   sectionCardSubtitle: { fontSize: 13, color: '#9E9E9E' },
   sectionArrow: { fontSize: 28, color: '#BDBDBD', marginLeft: 8 },
-  testBtn: {
-    backgroundColor: '#455A64', paddingVertical: 12, paddingHorizontal: 20,
-    borderRadius: 12, alignSelf: 'flex-start', marginBottom: 8,
-  },
-  testBtnText: { color: '#FFF', fontSize: 15, fontWeight: '700' },
-
   versionText:  { textAlign: 'center', color: '#BDBDBD', fontSize: 12, marginTop: 28 },
 
   infoCard: {
