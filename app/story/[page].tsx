@@ -27,69 +27,13 @@ function personalizeText(
   return text;
 }
 
-// ── Whisper word-timing data (exact timestamps from transcription) ───────────
-const TIMING: Record<number, { word: string; start: number; end: number }[]> = {
-  1:  require('@/assets/sounds/page1_timing.json'),
-  2:  require('@/assets/sounds/page2_timing.json'),
-  3:  require('@/assets/sounds/page3_timing.json'),
-  4:  require('@/assets/sounds/page4_timing.json'),
-  5:  require('@/assets/sounds/page5_timing.json'),
-  6:  require('@/assets/sounds/page6_timing.json'),
-  7:  require('@/assets/sounds/page7_timing.json'),
-  8:  require('@/assets/sounds/page8_timing.json'),
-  9:  require('@/assets/sounds/page9_timing.json'),
-  10: require('@/assets/sounds/page10_timing.json'),
-  11: require('@/assets/sounds/page11_timing.json'),
-  12: require('@/assets/sounds/page12_timing.json'),
-  13: require('@/assets/sounds/page13_timing.json'),
-  14: require('@/assets/sounds/page14_timing.json'),
-};
-
-// Match a display-word index to a Whisper word by stripping punctuation and comparing.
-// Returns the word index in the display `words` array that is currently being spoken.
-function activeDisplayWord(
-  positionSec: number,
-  timingWords: { word: string; start: number; end: number }[],
-  displayWords: string[],
-): number {
-  // Find which Whisper word is playing right now
-  let whisperIdx = -1;
-  for (let i = 0; i < timingWords.length; i++) {
-    if (positionSec >= timingWords[i].start && positionSec < timingWords[i].end) {
-      whisperIdx = i; break;
-    }
-    // In a gap between words, use the last word that finished
-    if (positionSec >= timingWords[i].end &&
-        (i + 1 >= timingWords.length || positionSec < timingWords[i + 1].start)) {
-      whisperIdx = i; break;
-    }
-  }
-  if (whisperIdx < 0) return -1;
-
-  // Map whisper word index → display word index proportionally
-  // (Whisper may split contractions or punctuation differently than split(/\s+/))
-  const ratio = displayWords.length / timingWords.length;
-  return Math.min(Math.round(whisperIdx * ratio), displayWords.length - 1);
+// Estimate how long (ms) each word takes expo-speech to say at rate=0.82.
+// Proportional to letter count so highlighting stays roughly in sync.
+// Tuned to ~115 wpm (the observed iOS TTS pace at rate 0.82).
+function wordDurationMs(word: string): number {
+  const letters = word.replace(/[^a-zA-Z]/g, '').length;
+  return Math.max(320, letters * 65 + 250);
 }
-// ─────────────────────────────────────────────────────────────────────────────
-
-// Bundled narrator recordings — used when no parent recording exists for a page
-const BUNDLED_AUDIO: Record<number, number> = {
-  1:  require('@/assets/sounds/page1.mp3'),
-  2:  require('@/assets/sounds/page2.mp3'),
-  3:  require('@/assets/sounds/page3.mp3'),
-  4:  require('@/assets/sounds/page4.mp3'),
-  5:  require('@/assets/sounds/page5.mp3'),
-  6:  require('@/assets/sounds/page6.mp3'),
-  7:  require('@/assets/sounds/page7.mp3'),
-  8:  require('@/assets/sounds/page8.mp3'),
-  9:  require('@/assets/sounds/page9.mp3'),
-  10: require('@/assets/sounds/page10.mp3'),
-  11: require('@/assets/sounds/page11.mp3'),
-  12: require('@/assets/sounds/page12.mp3'),
-  13: require('@/assets/sounds/page13.mp3'),
-  14: require('@/assets/sounds/page14.mp3'),
-};
 
 export default function StoryPageScreen() {
   const { page } = useLocalSearchParams<{ page: string }>();
@@ -101,53 +45,34 @@ export default function StoryPageScreen() {
   const pageIndex = STORY_DATA.findIndex(p => p.page === pageNum);
   const pageData  = STORY_DATA[pageIndex];
 
-  const soundRef       = useRef<Audio.Sound | null>(null);
-  const lastWordIdxRef = useRef<number>(-1);
-  const ttsTimerRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const soundRef    = useRef<Audio.Sound | null>(null);
+  const ttsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [playing,       setPlaying]       = useState(false);
   const [ttsPlaying,    setTtsPlaying]    = useState(false);
   const [loading,       setLoading]       = useState(false);
   const [activeWordIdx, setActiveWordIdx] = useState<number>(-1);
 
-  // Parent recording takes priority; fall back to bundled narrator MP3
-  const audioUri     = storyAudioUris[pageNum] ?? storyAudioUris[String(pageNum) as any];
+  // Parent recording only — everything else uses TTS so names are always correct.
+  const audioUri = storyAudioUris[pageNum] ?? storyAudioUris[String(pageNum) as any];
 
-  // Swap in custom character names for display and TTS.
-  // Note: parent recordings play unchanged — re-record after renaming characters.
-  const displayText  = personalizeText(pageData?.text ?? '', storyCharacters);
-  const words        = displayText.split(/\s+/).filter(Boolean);
-  const hasText      = words.length > 0;
-
-  // If any character has a custom name the bundled audio will say the wrong name.
-  // In that case skip the bundled MP3 and fall through to TTS, which reads
-  // displayText (already personalised). Parent recordings always take priority.
-  const hasCustomNames = STORY_CHARACTERS.some(char => {
-    const custom = storyCharacters[char.key]?.customName?.trim();
-    return !!custom && custom !== char.defaultName;
-  });
-  const bundledAudio = hasCustomNames ? undefined : BUNDLED_AUDIO[pageNum];
-
-  // Exact Whisper timestamps for bundled audio (null when TTS is used)
-  const timingWords = bundledAudio ? (TIMING[pageNum] ?? null) : null;
+  // Personalise text: swap in custom character names for display and TTS.
+  // Parent recordings play unchanged — re-record after renaming characters.
+  const displayText = personalizeText(pageData?.text ?? '', storyCharacters);
+  const words       = displayText.split(/\s+/).filter(Boolean);
+  const hasText     = words.length > 0;
 
   // ── Clean up everything when page changes or unmounts ──────────────────
   useEffect(() => {
     return () => {
-      // Stop recorded audio
       soundRef.current?.unloadAsync();
       soundRef.current = null;
-      lastWordIdxRef.current = -1;
-      // Stop TTS
       Speech.stop();
       if (ttsTimerRef.current) { clearTimeout(ttsTimerRef.current); ttsTimerRef.current = null; }
     };
   }, [page]);
 
-  const clearHighlight = () => {
-    lastWordIdxRef.current = -1;
-    setActiveWordIdx(-1);
-  };
+  const clearHighlight = () => setActiveWordIdx(-1);
 
   // ── Stop everything (called before navigating) ──────────────────────────
   const stopAll = async () => {
@@ -165,57 +90,37 @@ export default function StoryPageScreen() {
     clearHighlight();
   };
 
-  // ── Audio playback — parent recording or bundled narrator MP3 ───────────
-  // highlight=true only for bundled audio (Whisper timestamps available)
-  const playAudio = async (source: { uri: string } | number, highlight: boolean) => {
+  // ── Parent recording playback ────────────────────────────────────────────
+  const playAudio = async (uri: string) => {
     try {
       setLoading(true);
       await stopAll();
       await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
-      const { sound } = await Audio.Sound.createAsync(
-        typeof source === 'number' ? source : { uri: source.uri },
-        { shouldPlay: true },
-      );
+      const { sound } = await Audio.Sound.createAsync({ uri }, { shouldPlay: true });
       soundRef.current = sound;
       setPlaying(true);
       setLoading(false);
-
       sound.setOnPlaybackStatusUpdate((s) => {
         if (!s.isLoaded) return;
-        if (s.didJustFinish) {
-          setPlaying(false);
-          clearHighlight();
-          return;
-        }
-        // Only highlight words for bundled audio with Whisper timestamps
-        if (highlight && s.isPlaying && timingWords && words.length > 0) {
-          const idx = activeDisplayWord(s.positionMillis / 1000, timingWords, words);
-          if (idx !== lastWordIdxRef.current) {
-            lastWordIdxRef.current = idx;
-            setActiveWordIdx(idx);
-          }
-        }
+        if (s.didJustFinish) { setPlaying(false); clearHighlight(); }
       });
     } catch {
       setLoading(false);
       setPlaying(false);
       clearHighlight();
-      Alert.alert(
-        'Playback Error',
-        'Could not play the recording. Try re-recording this page in Parent Setup.',
-      );
+      Alert.alert('Playback Error', 'Could not play the recording. Try re-recording this page in Parent Setup.');
     }
   };
 
-  // ── TTS playback (for pages with no recording) ──────────────────────────
+  // ── TTS playback — used whenever there is no parent recording ────────────
   const playTTS = async () => {
     if (!hasText) return;
     await stopAll();
     await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
 
     // iOS requires an actual sound to be playing (or recently played) for
-    // Speech.speak to be audible.  Play the success chime silently to prime
-    // the audio session before we hand off to the speech synthesiser.
+    // Speech.speak to be audible. Play the success chime silently to prime
+    // the audio session before handing off to the speech synthesiser.
     try {
       const { sound: primer } = await Audio.Sound.createAsync(
         // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -228,21 +133,20 @@ export default function StoryPageScreen() {
     } catch { /* ignore — speech will still attempt */ }
 
     setTtsPlaying(true);
-    setActiveWordIdx(0);
 
-    // Simple even-paced TTS timing (~300 ms per word)
-    const msPerWord = 300;
-    let idx = 0;
-    const tick = () => {
-      if (idx >= words.length) { setActiveWordIdx(-1); setTtsPlaying(false); return; }
-      setActiveWordIdx(idx);
-      idx++;
-      ttsTimerRef.current = setTimeout(tick, msPerWord);
-    };
-    tick();
-
-    // Wait for the primer to activate the audio session before speaking
+    // Start speech and word highlighting together after the primer activates
+    // the audio session. Highlighting advances word-by-word with durations
+    // proportional to word length so it roughly tracks the TTS at rate=0.82.
     setTimeout(() => {
+      let idx = 0;
+      const advance = () => {
+        if (idx >= words.length) return;
+        setActiveWordIdx(idx);
+        ttsTimerRef.current = setTimeout(advance, wordDurationMs(words[idx]));
+        idx++;
+      };
+      advance();
+
       Speech.speak(displayText, {
         language: 'en-US',
         rate: 0.82,
@@ -394,15 +298,13 @@ export default function StoryPageScreen() {
             <Text style={styles.navBtnText}>‹</Text>
           </TouchableOpacity>
 
-          {audioUri || bundledAudio ? (
-            /* ── Recorded or bundled audio ── */
+          {audioUri ? (
+            /* ── Parent recording ── */
             <TouchableOpacity
               style={styles.playBtn}
               onPress={playing
                 ? () => { soundRef.current?.stopAsync().catch(() => {}); setPlaying(false); clearHighlight(); }
-                : () => audioUri
-                  ? playAudio({ uri: audioUri }, false)
-                  : playAudio(bundledAudio!, true)}
+                : () => playAudio(audioUri)}
               disabled={loading}
               activeOpacity={0.85}
             >
@@ -412,7 +314,7 @@ export default function StoryPageScreen() {
               }
             </TouchableOpacity>
           ) : hasText ? (
-            /* ── TTS fallback (no audio at all) ── */
+            /* ── TTS (no parent recording — always used so names are correct) ── */
             <TouchableOpacity
               style={styles.ttsBtn}
               onPress={ttsPlaying ? stopTTS : playTTS}
