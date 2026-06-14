@@ -27,7 +27,7 @@ export default function SetupStoryIndexScreen() {
           <Text style={styles.infoCardTitle}>📖 How Story Setup works</Text>
           <Text style={styles.infoCardBody}>
             You can personalize each story page in two ways:{'\n'}
-            {'  '}• Record your own voice reading the page aloud — your child hears you instead of the default TTS voice{'\n'}
+            {'  '}• Record your own voice reading the page aloud — your child hears you instead of the default voice{'\n'}
             {'  '}• Position character face circles so they land on the right person in each illustration{'\n\n'}
             To personalize with real family photos:{'\n'}
             {'  '}1. Tap "Manage Characters & Photos" below and add a photo for each character{'\n'}
