@@ -295,6 +295,14 @@ export default function SetupStoryPage() {
         {/* Bottom panel */}
         <View style={styles.bottomPanel} pointerEvents="box-none">
 
+          {/* Recording tip */}
+          <View style={styles.tipRow}>
+            <Text style={styles.tipText}>
+              🎙️ Read the text below aloud, then tap Stop. If you renamed any characters, those names already appear below.{' '}
+              <Text style={styles.tipWarn}>Re-record if you rename characters after saving.</Text>
+            </Text>
+          </View>
+
           {/* Story text */}
           <ScrollView style={styles.textScroll} pointerEvents="auto">
             <Text style={styles.storyText}>{personalizeText(pageData.text, storyCharacters)}</Text>
@@ -384,6 +392,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingBottom: 20, paddingTop: 10,
     borderTopLeftRadius: 20, borderTopRightRadius: 20,
   },
+  tipRow:  { backgroundColor: 'rgba(249,168,37,0.18)', borderLeftWidth: 3, borderLeftColor: '#F9A825', borderRadius: 8, padding: 8, marginBottom: 8 },
+  tipText: { color: 'rgba(255,255,255,0.85)', fontSize: 12, lineHeight: 17 },
+  tipWarn: { color: '#FFD54F', fontWeight: '700' },
+
   textScroll:    { maxHeight: 80, marginBottom: 10 },
   storyText:     { color: '#FFF', fontSize: 13, lineHeight: 19, opacity: 0.9 },
 

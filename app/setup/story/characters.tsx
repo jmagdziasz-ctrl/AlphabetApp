@@ -20,9 +20,21 @@ export default function StoryCharactersScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={styles.subtitle}>
-          Set a name and face photo for each character once here — they'll appear on every story page.
-        </Text>
+        <View style={styles.infoCard}>
+          <Text style={styles.infoCardTitle}>👥 How Story Characters works</Text>
+          <Text style={styles.infoCardBody}>
+            Set a name and face photo for each character here once — they'll appear on every story page automatically.{'\n\n'}
+            • The updated name will show in the story text and the app will read it aloud{'\n'}
+            • Face photos appear as draggable circles on each illustration — position them in Story Setup
+          </Text>
+        </View>
+
+        <View style={styles.warnCard}>
+          <Text style={styles.warnCardTitle}>⚠️ Record after renaming</Text>
+          <Text style={styles.warnCardBody}>
+            If you plan to rename characters, do it here first — then go to Story Setup to record your voice for each page. Any recordings you've already made will still use the original names and won't update automatically. Delete and re-record those pages after renaming.
+          </Text>
+        </View>
 
         {STORY_CHARACTERS.map((char) => {
           const custom      = storyCharacters[char.key];
@@ -81,6 +93,18 @@ const styles = StyleSheet.create({
   title:    { fontSize: 20, fontWeight: '800', color: '#37474F' },
   scroll:   { padding: 16, paddingBottom: 40 },
   subtitle: { fontSize: 13, color: '#9E9E9E', marginBottom: 20, lineHeight: 18 },
+  infoCard: {
+    backgroundColor: '#F3E5F5', borderLeftWidth: 4, borderLeftColor: '#7B1FA2',
+    borderRadius: 12, padding: 14, marginBottom: 12,
+  },
+  infoCardTitle: { fontSize: 15, fontWeight: '800', color: '#6A1B9A', marginBottom: 6 },
+  infoCardBody:  { fontSize: 13, color: '#37474F', lineHeight: 20 },
+  warnCard: {
+    backgroundColor: '#FFF8E1', borderLeftWidth: 4, borderLeftColor: '#F9A825',
+    borderRadius: 12, padding: 14, marginBottom: 20,
+  },
+  warnCardTitle: { fontSize: 15, fontWeight: '800', color: '#E65100', marginBottom: 6 },
+  warnCardBody:  { fontSize: 13, color: '#37474F', lineHeight: 20 },
 
   row: {
     flexDirection: 'row', alignItems: 'center',

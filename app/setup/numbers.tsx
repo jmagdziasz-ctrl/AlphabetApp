@@ -20,9 +20,15 @@ export default function SetupNumbersScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={styles.subtitle}>
-          Tap a number to change the character name or add a face photo.
-        </Text>
+        <View style={styles.infoCard}>
+          <Text style={styles.infoCardTitle}>🔢 How Numbers Setup works</Text>
+          <Text style={styles.infoCardBody}>
+            Each number has a character your child meets while counting. Tap any number to:{'\n'}
+            {'  '}• Give the character a family name (e.g. "Grandma" for 3){'\n'}
+            {'  '}• Add a face photo from your camera roll{'\n\n'}
+            Changes appear instantly — no restart needed.
+          </Text>
+        </View>
 
         {NUMBER_DATA.map((item) => {
           const custom      = customizations[String(item.number)];
@@ -63,6 +69,12 @@ const styles = StyleSheet.create({
   title:    { fontSize: 20, fontWeight: '800', color: '#37474F' },
   scroll:   { padding: 16, paddingBottom: 40 },
   subtitle: { fontSize: 13, color: '#9E9E9E', marginBottom: 16 },
+  infoCard: {
+    backgroundColor: '#F1F8E9', borderLeftWidth: 4, borderLeftColor: '#4CAF50',
+    borderRadius: 12, padding: 14, marginBottom: 20,
+  },
+  infoCardTitle: { fontSize: 15, fontWeight: '800', color: '#2E7D32', marginBottom: 6 },
+  infoCardBody:  { fontSize: 13, color: '#37474F', lineHeight: 20 },
   row: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: '#FFF', borderRadius: 12, marginBottom: 10,

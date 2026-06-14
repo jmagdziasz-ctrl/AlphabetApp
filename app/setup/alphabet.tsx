@@ -20,9 +20,15 @@ export default function SetupAlphabetScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
-        <Text style={styles.subtitle}>
-          Tap a letter to change the character name or add a face photo.
-        </Text>
+        <View style={styles.infoCard}>
+          <Text style={styles.infoCardTitle}>🔤 How Alphabet Setup works</Text>
+          <Text style={styles.infoCardBody}>
+            Each letter has a character that your child meets while learning. Tap any letter to:{'\n'}
+            {'  '}• Give the character a family name (e.g. "Aunt Grace" for G){'\n'}
+            {'  '}• Add a face photo from your camera roll{'\n\n'}
+            Changes appear instantly — no restart needed.
+          </Text>
+        </View>
 
         {ALPHABET_DATA.map((item) => {
           const custom      = customizations[item.letter];
@@ -63,6 +69,12 @@ const styles = StyleSheet.create({
   title:    { fontSize: 20, fontWeight: '800', color: '#37474F' },
   scroll:   { padding: 16, paddingBottom: 40 },
   subtitle: { fontSize: 13, color: '#9E9E9E', marginBottom: 16 },
+  infoCard: {
+    backgroundColor: '#FFF3E0', borderLeftWidth: 4, borderLeftColor: '#FF6B35',
+    borderRadius: 12, padding: 14, marginBottom: 20,
+  },
+  infoCardTitle: { fontSize: 15, fontWeight: '800', color: '#E65100', marginBottom: 6 },
+  infoCardBody:  { fontSize: 13, color: '#37474F', lineHeight: 20 },
   row: {
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: '#FFF', borderRadius: 12, marginBottom: 10,

@@ -99,6 +99,17 @@ export default function NameSetupScreen() {
 
       <ScrollView contentContainerStyle={styles.scroll}>
 
+        <View style={styles.infoCard}>
+          <Text style={styles.infoCardTitle}>✏️ How Names Setup works</Text>
+          <Text style={styles.infoCardBody}>
+            Add each family member here to unlock letter-tracing for their name. Your child taps a person's photo and traces every letter of their name one by one.{'\n\n'}
+            Tips:{'\n'}
+            {'  '}• Use a clear face photo — it appears on the tracing screen{'\n'}
+            {'  '}• Names are converted to uppercase automatically{'\n'}
+            {'  '}• Spaces are shown but skipped during tracing — only A–Z letters are traced
+          </Text>
+        </View>
+
         {familyMembers.length === 0 ? (
           <View style={styles.emptyHint}>
             <Text style={styles.emptyHintText}>
@@ -233,6 +244,13 @@ const styles = StyleSheet.create({
   backText: { fontSize: 16, color: '#607D8B', fontWeight: '600' },
   title:    { fontSize: 20, fontWeight: '800', color: '#37474F' },
   scroll:   { padding: 16, paddingBottom: 48 },
+
+  infoCard: {
+    backgroundColor: '#FFF0F7', borderLeftWidth: 4, borderLeftColor: '#E91E8C',
+    borderRadius: 12, padding: 14, marginBottom: 20,
+  },
+  infoCardTitle: { fontSize: 15, fontWeight: '800', color: '#AD1457', marginBottom: 6 },
+  infoCardBody:  { fontSize: 13, color: '#37474F', lineHeight: 20 },
 
   emptyHint: {
     backgroundColor: '#FFF3FA', borderRadius: 14, padding: 20,

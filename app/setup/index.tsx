@@ -78,6 +78,14 @@ export default function SetupHomeScreen() {
 
       <ScrollView contentContainerStyle={styles.scroll}>
 
+        {/* Welcome tip */}
+        <View style={styles.infoCard}>
+          <Text style={styles.infoCardTitle}>👋 Welcome to Parent Setup</Text>
+          <Text style={styles.infoCardBody}>
+            Everything here is hidden from little ones behind your PIN. Use the sections below to personalise the app with real family names and photos — your child will see the people they love on every screen.
+          </Text>
+        </View>
+
         {/* PIN */}
         <Text style={styles.sectionTitle}>🔐 Parent PIN</Text>
         <Text style={styles.sectionSubtitle}>Protects this area from little fingers.</Text>
@@ -152,5 +160,12 @@ const styles = StyleSheet.create({
   sectionCardSubtitle: { fontSize: 13, color: '#9E9E9E' },
   sectionArrow: { fontSize: 28, color: '#BDBDBD', marginLeft: 8 },
   versionText:  { textAlign: 'center', color: '#BDBDBD', fontSize: 12, marginTop: 28 },
+
+  infoCard: {
+    backgroundColor: '#F0F4FF', borderLeftWidth: 4, borderLeftColor: '#5C6BC0',
+    borderRadius: 12, padding: 14, marginBottom: 24,
+  },
+  infoCardTitle: { fontSize: 15, fontWeight: '800', color: '#3949AB', marginBottom: 6 },
+  infoCardBody:  { fontSize: 13, color: '#37474F', lineHeight: 20 },
 
 });

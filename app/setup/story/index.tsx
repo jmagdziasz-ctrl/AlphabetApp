@@ -22,6 +22,25 @@ export default function SetupStoryIndexScreen() {
       <ScrollView contentContainerStyle={styles.scroll}>
         <Text style={styles.bookTitle}>{STORY_TITLE}</Text>
 
+        {/* Info card */}
+        <View style={styles.infoCard}>
+          <Text style={styles.infoCardTitle}>📖 How Story Setup works</Text>
+          <Text style={styles.infoCardBody}>
+            You can personalise two things for each story page:{'\n'}
+            {'  '}• Record your own voice reading the page aloud — your child hears you instead of the default TTS voice{'\n'}
+            {'  '}• Drag the character face circles to match where they appear on the illustration{'\n\n'}
+            The full story text is shown on each page so you always know exactly what to read.
+          </Text>
+        </View>
+
+        {/* Re-record warning */}
+        <View style={styles.warnCard}>
+          <Text style={styles.warnCardTitle}>⚠️ Rename characters before recording</Text>
+          <Text style={styles.warnCardBody}>
+            If you want to use custom character names (e.g. your child's real name instead of "Benny"), set those up in Manage Characters first. Recordings you make before renaming will use the old names and won't update automatically — you'll need to re-record those pages.
+          </Text>
+        </View>
+
         {/* Characters button */}
         <TouchableOpacity
           style={styles.charactersBtn}
@@ -33,7 +52,7 @@ export default function SetupStoryIndexScreen() {
         </TouchableOpacity>
 
         <Text style={styles.subtitle}>
-          Tap a page to record yourself reading it. The full text is shown so you know exactly what to say.
+          Tap a page below to record your reading or reposition the face circles.
         </Text>
 
         {STORY_DATA.filter(p => p.page <= 14).map((page) => {
@@ -92,6 +111,18 @@ const styles = StyleSheet.create({
   charactersBtnText: { color: '#FFF', fontSize: 16, fontWeight: '800', marginBottom: 3 },
   charactersBtnSub:  { color: 'rgba(255,255,255,0.8)', fontSize: 13 },
   subtitle:  { fontSize: 13, color: '#9E9E9E', textAlign: 'center', marginBottom: 20, lineHeight: 18 },
+  infoCard: {
+    backgroundColor: '#F3E5F5', borderLeftWidth: 4, borderLeftColor: '#7B1FA2',
+    borderRadius: 12, padding: 14, marginBottom: 12,
+  },
+  infoCardTitle: { fontSize: 15, fontWeight: '800', color: '#6A1B9A', marginBottom: 6 },
+  infoCardBody:  { fontSize: 13, color: '#37474F', lineHeight: 20 },
+  warnCard: {
+    backgroundColor: '#FFF8E1', borderLeftWidth: 4, borderLeftColor: '#F9A825',
+    borderRadius: 12, padding: 14, marginBottom: 16,
+  },
+  warnCardTitle: { fontSize: 15, fontWeight: '800', color: '#E65100', marginBottom: 6 },
+  warnCardBody:  { fontSize: 13, color: '#37474F', lineHeight: 20 },
 
   card: {
     backgroundColor: '#FFF', borderRadius: 16, marginBottom: 16,
