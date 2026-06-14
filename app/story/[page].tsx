@@ -27,12 +27,17 @@ function personalizeText(
   return text;
 }
 
-// Estimate how long (ms) each word takes expo-speech to say at rate=0.82.
-// Proportional to letter count so highlighting stays roughly in sync.
-// Tuned to ~115 wpm (the observed iOS TTS pace at rate 0.82).
+// Estimate how long (ms) the highlighter should stay on each word.
+// Calibrated from Whisper timestamps of the original bundled TTS audio:
+//   • Average speaking time  ≈ 305 ms for a 5-letter word
+//   • iOS TTS pause after .!?  ≈ 550 ms
+//   • iOS TTS pause after ,;:  ≈ 600 ms
+//   • No measurable gap between consecutive plain words
 function wordDurationMs(word: string): number {
   const letters = word.replace(/[^a-zA-Z]/g, '').length;
-  return Math.max(320, letters * 65 + 250);
+  const speak = Math.max(180, letters * 25 + 180);
+  const pause = /[.!?]$/.test(word) ? 550 : /[,;:]$/.test(word) ? 600 : 0;
+  return speak + pause;
 }
 
 export default function StoryPageScreen() {
