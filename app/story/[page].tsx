@@ -27,6 +27,25 @@ function personalizeText(
   return text;
 }
 
+// Bundled narrator recordings — played when no parent recording exists and
+// no character names have been customised (photos-only changes don't affect audio).
+const BUNDLED_AUDIO: Record<number, number> = {
+  1:  require('@/assets/sounds/page1.mp3'),
+  2:  require('@/assets/sounds/page2.mp3'),
+  3:  require('@/assets/sounds/page3.mp3'),
+  4:  require('@/assets/sounds/page4.mp3'),
+  5:  require('@/assets/sounds/page5.mp3'),
+  6:  require('@/assets/sounds/page6.mp3'),
+  7:  require('@/assets/sounds/page7.mp3'),
+  8:  require('@/assets/sounds/page8.mp3'),
+  9:  require('@/assets/sounds/page9.mp3'),
+  10: require('@/assets/sounds/page10.mp3'),
+  11: require('@/assets/sounds/page11.mp3'),
+  12: require('@/assets/sounds/page12.mp3'),
+  13: require('@/assets/sounds/page13.mp3'),
+  14: require('@/assets/sounds/page14.mp3'),
+};
+
 // Estimate how long (ms) the highlighter should stay on each word.
 // Calibrated from Whisper timestamps of the original bundled TTS audio:
 //   • Average speaking time  ≈ 305 ms for a 5-letter word
@@ -67,14 +86,16 @@ export default function StoryPageScreen() {
   const words       = displayText.split(/\s+/).filter(Boolean);
   const hasText     = words.length > 0;
 
-  // TTS is only offered when at least one character name has been customised.
-  // If the parent only changed photos (or changed nothing), no audio button
-  // is shown — photos alone don't affect what is spoken, so TTS would just
-  // read the default script with no added value.
+  // True when at least one character name has been changed from its default.
+  // Photos alone don't affect what is spoken, so they don't influence audio routing.
   const hasCustomNames = STORY_CHARACTERS.some(char => {
     const custom = storyCharacters[char.key]?.customName?.trim();
     return !!custom && custom !== char.defaultName;
   });
+
+  // When names are default, fall back to the bundled narrator MP3.
+  // When names are customised, use TTS so the custom names are spoken correctly.
+  const bundledAudio = hasCustomNames ? undefined : BUNDLED_AUDIO[pageNum];
 
   // ── Clean up everything when page changes or unmounts ──────────────────
   useEffect(() => {
@@ -104,13 +125,16 @@ export default function StoryPageScreen() {
     clearHighlight();
   };
 
-  // ── Parent recording playback ────────────────────────────────────────────
-  const playAudio = async (uri: string) => {
+  // ── Audio playback — parent recording or bundled narrator MP3 ───────────
+  const playAudio = async (source: string | number) => {
     try {
       setLoading(true);
       await stopAll();
       await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
-      const { sound } = await Audio.Sound.createAsync({ uri }, { shouldPlay: true });
+      const { sound } = await Audio.Sound.createAsync(
+        typeof source === 'number' ? source : { uri: source },
+        { shouldPlay: true },
+      );
       soundRef.current = sound;
       setPlaying(true);
       setLoading(false);
@@ -122,7 +146,7 @@ export default function StoryPageScreen() {
       setLoading(false);
       setPlaying(false);
       clearHighlight();
-      Alert.alert('Playback Error', 'Could not play the recording. Try re-recording this page in Parent Setup.');
+      Alert.alert('Playback Error', 'Could not play audio for this page.');
     }
   };
 
@@ -312,13 +336,13 @@ export default function StoryPageScreen() {
             <Text style={styles.navBtnText}>‹</Text>
           </TouchableOpacity>
 
-          {audioUri ? (
-            /* ── Parent recording ── */
+          {audioUri || bundledAudio ? (
+            /* ── Parent recording or bundled narrator ── */
             <TouchableOpacity
               style={styles.playBtn}
               onPress={playing
                 ? () => { soundRef.current?.stopAsync().catch(() => {}); setPlaying(false); clearHighlight(); }
-                : () => playAudio(audioUri)}
+                : () => playAudio(audioUri ?? bundledAudio!)}
               disabled={loading}
               activeOpacity={0.85}
             >
@@ -327,8 +351,8 @@ export default function StoryPageScreen() {
                 : <Text style={styles.playBtnText}>{playing ? '⏹' : '▶'}</Text>
               }
             </TouchableOpacity>
-          ) : hasCustomNames && hasText ? (
-            /* ── TTS — only when custom names exist, so the spoken names match ── */
+          ) : hasText ? (
+            /* ── TTS — only reaches here when custom names exist (bundledAudio is undefined) ── */
             <TouchableOpacity
               style={styles.ttsBtn}
               onPress={ttsPlaying ? stopTTS : playTTS}
