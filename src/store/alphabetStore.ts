@@ -87,6 +87,15 @@ interface AlphabetStore {
   unlockStory: () => Promise<void>;
   unlockNames: () => Promise<void>;
   unlockAll: () => Promise<void>;
+  /** Authoritative unlock-state write used by syncEntitlements.
+   *  Sets all four flags at once so local storage can never drift
+   *  ahead of what RevenueCat actually granted. */
+  setUnlockStates: (states: {
+    isPremiumUnlocked: boolean;
+    isNumbersUnlocked: boolean;
+    isStoryUnlocked: boolean;
+    isNamesUnlocked: boolean;
+  }) => Promise<void>;
   setParentPin: (pin: string) => Promise<void>;
   setLetterCase: (c: 'upper' | 'lower') => Promise<void>;
   setStoryCustomization: (page: number, data: Partial<StoryPageCustomization>) => Promise<void>;
@@ -155,6 +164,16 @@ export const useAlphabetStore = create<AlphabetStore>((set, get) => ({
       ['isNumbersUnlocked', 'true'],
       ['isStoryUnlocked',   'true'],
       ['isNamesUnlocked',   'true'],
+    ]);
+  },
+
+  setUnlockStates: async (states) => {
+    set(states);
+    await AsyncStorage.multiSet([
+      ['isPremiumUnlocked', String(states.isPremiumUnlocked)],
+      ['isNumbersUnlocked', String(states.isNumbersUnlocked)],
+      ['isStoryUnlocked',   String(states.isStoryUnlocked)],
+      ['isNamesUnlocked',   String(states.isNamesUnlocked)],
     ]);
   },
 
