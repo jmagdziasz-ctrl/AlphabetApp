@@ -58,7 +58,7 @@ export default function StoryPageScreen() {
   const [loading,       setLoading]       = useState(false);
   const [activeWordIdx, setActiveWordIdx] = useState<number>(-1);
 
-  // Parent recording only — everything else uses TTS so names are always correct.
+  // Parent recording takes top priority.
   const audioUri = storyAudioUris[pageNum] ?? storyAudioUris[String(pageNum) as any];
 
   // Personalize text: swap in custom character names for display and TTS.
@@ -66,6 +66,15 @@ export default function StoryPageScreen() {
   const displayText = personalizeText(pageData?.text ?? '', storyCharacters);
   const words       = displayText.split(/\s+/).filter(Boolean);
   const hasText     = words.length > 0;
+
+  // TTS is only offered when at least one character name has been customised.
+  // If the parent only changed photos (or changed nothing), no audio button
+  // is shown — photos alone don't affect what is spoken, so TTS would just
+  // read the default script with no added value.
+  const hasCustomNames = STORY_CHARACTERS.some(char => {
+    const custom = storyCharacters[char.key]?.customName?.trim();
+    return !!custom && custom !== char.defaultName;
+  });
 
   // ── Clean up everything when page changes or unmounts ──────────────────
   useEffect(() => {
@@ -318,8 +327,8 @@ export default function StoryPageScreen() {
                 : <Text style={styles.playBtnText}>{playing ? '⏹' : '▶'}</Text>
               }
             </TouchableOpacity>
-          ) : hasText ? (
-            /* ── TTS (no parent recording — always used so names are correct) ── */
+          ) : hasCustomNames && hasText ? (
+            /* ── TTS — only when custom names exist, so the spoken names match ── */
             <TouchableOpacity
               style={styles.ttsBtn}
               onPress={ttsPlaying ? stopTTS : playTTS}
