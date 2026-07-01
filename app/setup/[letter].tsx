@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useWindowDimensions } from 'react-native';
 import { ALPHABET_DATA } from '@/constants/alphabetData';
 import { SceneView } from '@/components/SceneView';
+import { CircularCropModal } from '@/components/CircularCropModal';
 import { useAlphabetStore } from '@/store/alphabetStore';
 
 export default function SetupLetterScreen() {
@@ -38,6 +39,11 @@ export default function SetupLetterScreen() {
   const [rotation, setRotation]   = useState(existing?.customImageRotation  ?? 0);
   const [imageUri2, setImageUri2] = useState(existing?.customImageUri2 ?? '');
   const [rotation2, setRotation2] = useState(existing?.customImageRotation2 ?? 0);
+
+  // Crop modal state
+  const [cropUri, setCropUri]   = useState('');
+  const [cropSlot, setCropSlot] = useState<1 | 2>(1);
+  const [cropVisible, setCropVisible] = useState(false);
 
   const [faceTop,    setFaceTop]    = useState(existing?.customFaceTop  ?? letterData?.facePosition.top  ?? 0.25);
   const [faceLeft,   setFaceLeft]   = useState(existing?.customFaceLeft ?? letterData?.facePosition.left ?? 0.5);
@@ -65,15 +71,21 @@ export default function SetupLetterScreen() {
     }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
+      allowsEditing: false,
+      quality: 1,
       presentationStyle: ImagePicker.UIImagePickerPresentationStyle.FULL_SCREEN,
     });
     if (!result.canceled && result.assets[0]) {
-      if (slot === 1) { setImageUri(result.assets[0].uri); setRotation(0); }
-      else            { setImageUri2(result.assets[0].uri); setRotation2(0); }
+      setCropUri(result.assets[0].uri);
+      setCropSlot(slot);
+      setCropVisible(true);
     }
+  };
+
+  const handleCropped = (uri: string) => {
+    setCropVisible(false);
+    if (cropSlot === 1) { setImageUri(uri); setRotation(0); }
+    else                { setImageUri2(uri); setRotation2(0); }
   };
 
   const rotate = (slot: 1 | 2, direction: 'left' | 'right') => {
@@ -273,7 +285,7 @@ export default function SetupLetterScreen() {
           <>
             {/* First character */}
             <Text style={styles.sectionLabel}>📷 {name1Label}'s Face Photo</Text>
-            <Text style={styles.hint}>Tip: center the face when cropping — the square edges will be hidden.</Text>
+            <Text style={styles.hint}>Tip: pinch to zoom in tight on the face — the outside of the circle is hidden.</Text>
             <TouchableOpacity style={styles.photoBtn} onPress={() => pickImage(1)}>
               <Text style={styles.photoBtnText}>Choose Photo for {name1Label}</Text>
             </TouchableOpacity>
@@ -325,8 +337,8 @@ export default function SetupLetterScreen() {
         ) : (
           <>
             <Text style={styles.sectionLabel}>Character Face Photo</Text>
-            <Text style={styles.hint}>Choose a photo and crop to the person's face. It will appear as a circle on the scene.</Text>
-            <Text style={styles.hint}>Tip: center the face when cropping — the square edges will be hidden.</Text>
+            <Text style={styles.hint}>Choose a photo, then drag and pinch to position the face inside the circle.</Text>
+            <Text style={styles.hint}>Tip: pinch to zoom in tight on the face — the outside of the circle is hidden.</Text>
             <TouchableOpacity style={styles.photoBtn} onPress={() => pickImage(1)}>
               <Text style={styles.photoBtnText}>📷 Choose Photo & Crop Face</Text>
             </TouchableOpacity>
@@ -356,6 +368,13 @@ export default function SetupLetterScreen() {
           <Text style={styles.resetBtnText}>Reset to Default</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <CircularCropModal
+        visible={cropVisible}
+        imageUri={cropUri}
+        onCrop={handleCropped}
+        onCancel={() => setCropVisible(false)}
+      />
     </SafeAreaView>
   );
 }

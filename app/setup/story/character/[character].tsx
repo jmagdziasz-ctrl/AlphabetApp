@@ -7,6 +7,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { STORY_CHARACTERS } from '@/constants/storyData';
+import { CircularCropModal } from '@/components/CircularCropModal';
 import { useAlphabetStore } from '@/store/alphabetStore';
 
 export default function SetupStoryCharacterScreen() {
@@ -21,6 +22,9 @@ export default function SetupStoryCharacterScreen() {
   const [imageUri, setImageUri] = useState(existing?.customImageUri ?? '');
   const [rotation, setRotation] = useState(existing?.customImageRotation ?? 0);
 
+  const [cropUri,     setCropUri]     = useState('');
+  const [cropVisible, setCropVisible] = useState(false);
+
   if (!charDef) return null;
 
   const pickImage = async () => {
@@ -31,14 +35,13 @@ export default function SetupStoryCharacterScreen() {
     }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
+      allowsEditing: false,
+      quality: 1,
       presentationStyle: ImagePicker.UIImagePickerPresentationStyle.FULL_SCREEN,
     });
     if (!result.canceled && result.assets[0]) {
-      setImageUri(result.assets[0].uri);
-      setRotation(0);
+      setCropUri(result.assets[0].uri);
+      setCropVisible(true);
     }
   };
 
@@ -117,7 +120,7 @@ export default function SetupStoryCharacterScreen() {
         {/* Photo */}
         <Text style={styles.sectionLabel}>Face Photo</Text>
         <Text style={styles.hint}>
-          Crop tight to the face — the circle will hide the square edges.
+          Drag and pinch to zoom so the face fills the circle — outside the circle is hidden.
         </Text>
         <TouchableOpacity style={styles.photoBtn} onPress={pickImage}>
           <Text style={styles.photoBtnText}>📷 Choose Photo &amp; Crop Face</Text>
@@ -141,6 +144,13 @@ export default function SetupStoryCharacterScreen() {
         ) : null}
 
       </ScrollView>
+
+      <CircularCropModal
+        visible={cropVisible}
+        imageUri={cropUri}
+        onCrop={(uri) => { setCropVisible(false); setImageUri(uri); setRotation(0); }}
+        onCancel={() => setCropVisible(false)}
+      />
     </SafeAreaView>
   );
 }

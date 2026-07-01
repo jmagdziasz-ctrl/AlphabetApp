@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useWindowDimensions } from 'react-native';
 import { NUMBER_DATA } from '@/constants/numberData';
 import { SceneView } from '@/components/SceneView';
+import { CircularCropModal } from '@/components/CircularCropModal';
 import { useAlphabetStore } from '@/store/alphabetStore';
 
 export default function SetupNumberScreen() {
@@ -38,6 +39,9 @@ export default function SetupNumberScreen() {
   const [imageUri, setImageUri] = useState(existing?.customImageUri ?? '');
   const [rotation, setRotation] = useState(existing?.customImageRotation ?? 0);
 
+  const [cropUri,     setCropUri]     = useState('');
+  const [cropVisible, setCropVisible] = useState(false);
+
   const [faceTop,    setFaceTop]    = useState(existing?.customFaceTop  ?? numData?.facePosition.top  ?? 0.25);
   const [faceLeft,   setFaceLeft]   = useState(existing?.customFaceLeft ?? numData?.facePosition.left ?? 0.5);
   const defaultW = existing?.customFaceSize ?? numData?.facePosition.size ?? 80;
@@ -57,14 +61,13 @@ export default function SetupNumberScreen() {
     }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
+      allowsEditing: false,
+      quality: 1,
       presentationStyle: ImagePicker.UIImagePickerPresentationStyle.FULL_SCREEN,
     });
     if (!result.canceled && result.assets[0]) {
-      setImageUri(result.assets[0].uri);
-      setRotation(0);
+      setCropUri(result.assets[0].uri);
+      setCropVisible(true);
     }
   };
 
@@ -172,8 +175,7 @@ export default function SetupNumberScreen() {
 
         {/* Photo */}
         <Text style={styles.sectionLabel}>Character Face Photo</Text>
-        <Text style={styles.hint}>Choose a photo and crop to the person's face. It will appear as a circle on the scene.</Text>
-        <Text style={styles.hint}>Tip: center the face when cropping — the square edges will be hidden.</Text>
+        <Text style={styles.hint}>Choose a photo, then drag and pinch to position the face inside the circle.</Text>
         <TouchableOpacity style={styles.photoBtn} onPress={pickImage}>
           <Text style={styles.photoBtnText}>📷 Choose Photo & Crop Face</Text>
         </TouchableOpacity>
@@ -263,6 +265,13 @@ export default function SetupNumberScreen() {
           <Text style={styles.resetBtnText}>Reset to Default</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <CircularCropModal
+        visible={cropVisible}
+        imageUri={cropUri}
+        onCrop={(uri) => { setCropVisible(false); setImageUri(uri); setRotation(0); }}
+        onCancel={() => setCropVisible(false)}
+      />
     </SafeAreaView>
   );
 }
