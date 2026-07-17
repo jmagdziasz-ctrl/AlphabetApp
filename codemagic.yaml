@@ -63,6 +63,8 @@ workflows:
     name: Android Google Play Release
     max_build_duration: 120
     environment:
+      android_signing:
+        - abcandme_keystore
       groups:
         - google_play_credentials
       node: v20
@@ -77,22 +79,17 @@ workflows:
         script: |
           echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
 
-      - name: Set up keystore
-        script: |
-          echo $CM_KEYSTORE | base64 --decode > android/release.keystore
-
       - name: Build Android App Bundle
         script: |
           cd android
           ./gradlew bundleRelease \
-            -Pandroid.injected.signing.store.file=$CM_BUILD_DIR/android/release.keystore \
+            -Pandroid.injected.signing.store.file=$CM_KEYSTORE_PATH \
             -Pandroid.injected.signing.store.password=$CM_KEYSTORE_PASSWORD \
             -Pandroid.injected.signing.key.alias=$CM_KEY_ALIAS \
             -Pandroid.injected.signing.key.password=$CM_KEY_PASSWORD
 
     artifacts:
       - android/app/build/outputs/bundle/release/app-release.aab
-      - android/app/build/outputs/apk/release/app-release.apk
 
     publishing:
       google_play:
