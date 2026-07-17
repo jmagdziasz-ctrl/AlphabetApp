@@ -22,6 +22,7 @@
     },
     "android": {
       "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#FFF9F0"
       },
       "package": "com.jmagdziasz.abcfamily",
