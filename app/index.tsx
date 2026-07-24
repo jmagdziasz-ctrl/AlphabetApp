@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   Alert,
+  Modal,
+  TextInput,
+  Platform,
   useWindowDimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -27,29 +30,46 @@ export default function HomeScreen() {
   const isNamesUnlocked   = useAlphabetStore(s => s.isNamesUnlocked);
   const parentPin         = useAlphabetStore(s => s.parentPin);
 
-  // Calculate button size so the whole screen fits without scrolling.
-  // Reserve space for title, subtitle, section buttons, unlock banner, setup button, and padding.
+  const [pinModalVisible, setPinModalVisible] = useState(false);
+  const [pinInput, setPinInput]               = useState('');
+
+  // Reserve proportional space for chrome (title + section row + bottom buttons + padding).
   const hasAnyLocked  = !isPremiumUnlocked || !isNumbersUnlocked || !isStoryUnlocked || !isNamesUnlocked;
-  const nonGridHeight = hasAnyLocked ? 230 : 185;
+  const nonGridHeight = height * (hasAnyLocked ? 0.30 : 0.24);
   const gridHeight    = height - nonGridHeight;
   const btnByHeight   = (gridHeight - GAP * (ROWS - 1)) / ROWS;
   const btnByWidth    = (width - 32 - GAP * (COLS - 1)) / COLS;
   const btnSize       = Math.floor(Math.min(btnByHeight, btnByWidth));
-  const letterFontSize = Math.max(16, Math.floor(btnSize * 0.42));
+  const letterFontSize = Math.max(14, Math.floor(btnSize * 0.42));
+  const titleFontSize  = Math.min(34, Math.floor(height * 0.052));
 
   const openSetup = () => {
-    Alert.prompt(
-      'Parent Setup',
-      'Enter PIN (default: 1234)',
-      (pin) => {
-        if (pin === parentPin) {
-          router.push('/setup');
-        } else {
-          Alert.alert('Incorrect PIN', 'Please try again.');
-        }
-      },
-      'secure-text'
-    );
+    if (Platform.OS === 'ios') {
+      Alert.prompt(
+        'Parent Setup',
+        'Enter PIN (default: 1234)',
+        (pin) => {
+          if (pin === parentPin) {
+            router.push('/setup');
+          } else {
+            Alert.alert('Incorrect PIN', 'Please try again.');
+          }
+        },
+        'secure-text'
+      );
+    } else {
+      setPinInput('');
+      setPinModalVisible(true);
+    }
+  };
+
+  const submitPin = () => {
+    setPinModalVisible(false);
+    if (pinInput === parentPin) {
+      router.push('/setup');
+    } else {
+      Alert.alert('Incorrect PIN', 'Please try again.');
+    }
   };
 
   const handleLetterPress = (letter: string) => {
@@ -66,7 +86,7 @@ export default function HomeScreen() {
       <View style={styles.container}>
 
         {/* Title */}
-        <Text style={styles.title}>ABC and Me!</Text>
+        <Text style={[styles.title, { fontSize: titleFontSize }]}>ABC and Me!</Text>
 
         {/* Section buttons */}
         <View style={styles.sectionRow}>
@@ -146,6 +166,34 @@ export default function HomeScreen() {
         </View>
 
       </View>
+
+      {/* Android PIN modal (Alert.prompt is iOS-only) */}
+      <Modal visible={pinModalVisible} transparent animationType="fade">
+        <View style={styles.pinOverlay}>
+          <View style={styles.pinBox}>
+            <Text style={styles.pinTitle}>Parent Setup</Text>
+            <Text style={styles.pinSubtitle}>Enter PIN (default: 1234)</Text>
+            <TextInput
+              style={styles.pinInput}
+              value={pinInput}
+              onChangeText={setPinInput}
+              secureTextEntry
+              keyboardType="number-pad"
+              maxLength={10}
+              autoFocus
+            />
+            <View style={styles.pinBtnRow}>
+              <TouchableOpacity style={styles.pinCancel} onPress={() => setPinModalVisible(false)}>
+                <Text style={styles.pinCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.pinOk} onPress={submitPin}>
+                <Text style={styles.pinOkText}>OK</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -160,7 +208,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   title: {
-    fontSize: 34,
     fontWeight: '900',
     color: '#FF6B35',
     marginTop: 4,
@@ -214,4 +261,18 @@ const styles = StyleSheet.create({
     borderRadius: 50,
   },
   setupBtnText: { color: 'white', fontSize: 16, fontWeight: '700' },
+
+  pinOverlay:  { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
+  pinBox:      { backgroundColor: '#FFF', borderRadius: 16, padding: 24, width: 280 },
+  pinTitle:    { fontSize: 18, fontWeight: '800', color: '#37474F', marginBottom: 6 },
+  pinSubtitle: { fontSize: 14, color: '#9E9E9E', marginBottom: 16 },
+  pinInput: {
+    borderWidth: 1.5, borderColor: '#E0E0E0', borderRadius: 10,
+    padding: 12, fontSize: 18, letterSpacing: 4, marginBottom: 20,
+  },
+  pinBtnRow:    { flexDirection: 'row', justifyContent: 'flex-end', gap: 12 },
+  pinCancel:    { paddingVertical: 8, paddingHorizontal: 16 },
+  pinCancelText:{ color: '#9E9E9E', fontSize: 16, fontWeight: '600' },
+  pinOk:        { backgroundColor: '#607D8B', paddingVertical: 8, paddingHorizontal: 20, borderRadius: 8 },
+  pinOkText:    { color: '#FFF', fontSize: 16, fontWeight: '700' },
 });
