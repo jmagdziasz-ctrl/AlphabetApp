@@ -4,7 +4,7 @@ import {
   useWindowDimensions, Image, ScrollView,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAlphabetStore } from '@/store/alphabetStore';
 import { LetterTracer } from '@/components/LetterTracer';
 import { FeedbackModal } from '@/components/FeedbackModal';
@@ -80,6 +80,7 @@ export default function NameTraceScreen() {
   const { id }  = useLocalSearchParams<{ id: string }>();
   const router  = useRouter();
   const { width, height } = useWindowDimensions();
+  const insets   = useSafeAreaInsets();
   const isTablet = width >= 768;
 
   const familyMembers = useAlphabetStore(s => s.familyMembers);
@@ -250,7 +251,7 @@ export default function NameTraceScreen() {
   const FIXED_H = 52 + HEADER_H + 32 + 28 + SKIP_H + 12;
   const tracerSizeRef = useRef<number | null>(null);
   if (tracerSizeRef.current === null) {
-    tracerSizeRef.current = Math.max(120, Math.floor(Math.min(width - 48, height - FIXED_H)));
+    tracerSizeRef.current = Math.max(120, Math.floor(Math.min(width - 48, height - insets.top - insets.bottom - FIXED_H)));
   }
   const tracerSize = tracerSizeRef.current;
   const currentLetter = nameLetters[currentIdx];

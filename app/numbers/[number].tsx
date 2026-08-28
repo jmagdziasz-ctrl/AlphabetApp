@@ -3,7 +3,7 @@ import {
   View, Text, TouchableOpacity, StyleSheet, useWindowDimensions, Image,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NUMBER_DATA } from '@/constants/numberData';
 import { SceneView } from '@/components/SceneView';
 import { LetterTracer } from '@/components/LetterTracer';
@@ -14,6 +14,7 @@ export default function NumberLearnScreen() {
   const { number } = useLocalSearchParams<{ number: string }>();
   const router = useRouter();
   const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
   const numIndex  = NUMBER_DATA.findIndex(d => d.number === Number(number));
   const numData   = NUMBER_DATA[numIndex];
@@ -27,7 +28,7 @@ export default function NumberLearnScreen() {
 
   // Dynamic sizing — same approach as alphabet learn screen
   const FIXED_H    = 52 + 36 + 44 + 60 + 16;
-  const available  = height - FIXED_H;
+  const available  = height - insets.top - insets.bottom - FIXED_H;
   const tracerSize = Math.floor(Math.min(width - 48, available * 0.55));
   const sceneHeight = Math.max(120, available - tracerSize);
 

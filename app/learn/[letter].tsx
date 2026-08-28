@@ -7,7 +7,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ALPHABET_DATA } from '@/constants/alphabetData';
 import { SceneView } from '@/components/SceneView';
 import { LetterTracer } from '@/components/LetterTracer';
@@ -18,6 +18,7 @@ export default function LearnScreen() {
   const { letter } = useLocalSearchParams<{ letter: string }>();
   const router = useRouter();
   const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
   const customizations    = useAlphabetStore(s => s.customizations);
   const isPremiumUnlocked = useAlphabetStore(s => s.isPremiumUnlocked);
@@ -59,7 +60,7 @@ export default function LearnScreen() {
   const PADDING_H  = 16;
   const FIXED_H    = HEADER_H + LABEL_H + TOGGLE_H + PROGRESS_H + NAV_H + PADDING_H;
 
-  const available  = height - FIXED_H;
+  const available  = height - insets.top - insets.bottom - FIXED_H;
   // Give ~45% to scene, ~55% to tracer; clamp tracer to screen width
   const tracerSize  = Math.floor(Math.min(width - 48, available * 0.55));
   const sceneHeight = Math.max(120, available - tracerSize);

@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useWindowDimensions } from 'react-native';
 import { ALPHABET_DATA } from '@/constants/alphabetData';
 import { SceneView } from '@/components/SceneView';
@@ -22,10 +22,11 @@ export default function SetupLetterScreen() {
   const { letter } = useLocalSearchParams<{ letter: string }>();
   const router = useRouter();
   const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
   // Match the learn screen's scene height so face positions align between setup and learn
   const LEARN_FIXED_H = 52 + 36 + 44 + 60 + 16;
-  const available = height - LEARN_FIXED_H;
+  const available = height - insets.top - insets.bottom - LEARN_FIXED_H;
   const tracerSize = Math.floor(Math.min(width - 48, available * 0.55));
   const PREVIEW_HEIGHT = Math.max(120, available - tracerSize);
   const { customizations, setCustomization, clearCustomization } = useAlphabetStore();

@@ -3,7 +3,7 @@ import {
   View, Text, TouchableOpacity, StyleSheet, useWindowDimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NUMBER_DATA } from '@/constants/numberData';
 
 const COLS = 2;
@@ -11,13 +11,13 @@ const ROWS = 5; // 10 numbers / 2 cols
 
 export default function NumbersHomeScreen() {
   const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const router = useRouter();
 
   const GAP     = 12;
   const PADDING = 16;
   const btnW    = (width - PADDING * 2 - GAP * (COLS - 1)) / COLS;
-  // Reserve space for header
-  const btnH    = Math.floor((height - 80 - GAP * (ROWS - 1) - PADDING * 2) / ROWS);
+  const btnH    = Math.floor((height - insets.top - insets.bottom - 80 - GAP * (ROWS - 1) - PADDING * 2) / ROWS);
 
   return (
     <SafeAreaView style={styles.safe}>
