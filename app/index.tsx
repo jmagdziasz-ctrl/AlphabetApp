@@ -11,7 +11,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ALPHABET_DATA } from '@/constants/alphabetData';
 import { useAlphabetStore, FREE_LETTERS } from '@/store/alphabetStore';
 import { STORY_TITLE } from '@/constants/storyData';
@@ -22,6 +22,7 @@ const GAP  = 6;
 
 export default function HomeScreen() {
   const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const router = useRouter();
   const customizations    = useAlphabetStore(s => s.customizations);
   const isPremiumUnlocked = useAlphabetStore(s => s.isPremiumUnlocked);
@@ -33,15 +34,18 @@ export default function HomeScreen() {
   const [pinModalVisible, setPinModalVisible] = useState(false);
   const [pinInput, setPinInput]               = useState('');
 
-  // Reserve proportional space for chrome (title + section row + bottom buttons + padding).
+  // usableHeight excludes status bar (top) and home indicator / nav bar (bottom).
+  // useWindowDimensions returns full device height, but SafeAreaView consumes the insets,
+  // so grid calculations must use the actual available height.
+  const usableHeight  = height - insets.top - insets.bottom;
   const hasAnyLocked  = !isPremiumUnlocked || !isNumbersUnlocked || !isStoryUnlocked || !isNamesUnlocked;
-  const nonGridHeight = height * (hasAnyLocked ? 0.30 : 0.24);
-  const gridHeight    = height - nonGridHeight;
+  const nonGridHeight = usableHeight * (hasAnyLocked ? 0.32 : 0.26);
+  const gridHeight    = usableHeight - nonGridHeight;
   const btnByHeight   = (gridHeight - GAP * (ROWS - 1)) / ROWS;
   const btnByWidth    = (width - 32 - GAP * (COLS - 1)) / COLS;
   const btnSize       = Math.floor(Math.min(btnByHeight, btnByWidth));
   const letterFontSize = Math.max(14, Math.floor(btnSize * 0.42));
-  const titleFontSize  = Math.min(34, Math.floor(height * 0.052));
+  const titleFontSize  = Math.min(34, Math.floor(usableHeight * 0.052));
 
   const openSetup = () => {
     if (Platform.OS === 'ios') {
