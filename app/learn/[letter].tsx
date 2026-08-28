@@ -7,7 +7,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ALPHABET_DATA } from '@/constants/alphabetData';
 import { SceneView } from '@/components/SceneView';
 import { LetterTracer } from '@/components/LetterTracer';
@@ -17,8 +17,7 @@ import { useAlphabetStore, FREE_LETTERS } from '@/store/alphabetStore';
 export default function LearnScreen() {
   const { letter } = useLocalSearchParams<{ letter: string }>();
   const router = useRouter();
-  const { width, height } = useWindowDimensions();
-  const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
 
   const customizations    = useAlphabetStore(s => s.customizations);
   const isPremiumUnlocked = useAlphabetStore(s => s.isPremiumUnlocked);
@@ -29,10 +28,11 @@ export default function LearnScreen() {
   const letterData    = ALPHABET_DATA[letterIndex];
   const customization = customizations[letter ?? ''];
 
-  const [progress, setProgress]       = useState(0);
+  const [progress, setProgress]         = useState(0);
   const [modalVisible, setModalVisible] = useState(false);
-  const [isSuccess, setIsSuccess]     = useState(false);
-  const [tracerKey, setTracerKey] = useState(0);
+  const [isSuccess, setIsSuccess]       = useState(false);
+  const [tracerKey, setTracerKey]       = useState(0);
+  const [middleH, setMiddleH]           = useState(0);
   const attemptsRef = useRef(0);
 
   const isLowercase = letterCase === 'lower';
@@ -50,21 +50,10 @@ export default function LearnScreen() {
     if (isLocked) router.replace('/paywall');
   }, [isLocked]);
 
-  // ── Dynamic sizing ──────────────────────────────────────────────────────────
-  // Reserve space for: header + trace label + case toggle + progress bar+text + nav row + padding
-  const HEADER_H   = 52;
-  const LABEL_H    = 36;
-  const TOGGLE_H   = 40;
-  const PROGRESS_H = 44;
-  const NAV_H      = 60;
-  const PADDING_H  = 16;
-  const FIXED_H    = HEADER_H + LABEL_H + TOGGLE_H + PROGRESS_H + NAV_H + PADDING_H;
-
-  const available  = height - insets.top - insets.bottom - FIXED_H;
-  // Give ~45% to scene, ~55% to tracer; clamp tracer to screen width
-  const tracerSize  = Math.floor(Math.min(width - 48, available * 0.55));
-  const sceneHeight = Math.max(120, available - tracerSize);
-  // ───────────────────────────────────────────────────────────────────────────
+  // Sizes derived from the flex-measured middle area, not raw screen height.
+  // This is reliable across all Android devices regardless of inset sizes.
+  const tracerSize  = middleH > 0 ? Math.floor(Math.min(width - 48, middleH * 0.58)) : 0;
+  const sceneHeight = middleH > 0 ? Math.max(80, middleH - tracerSize - 72) : 0;
 
   const handleComplete = useCallback((score: number) => {
     setIsSuccess(score >= 0.8);
@@ -103,45 +92,47 @@ export default function LearnScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Scene */}
-      <SceneView
-        letterData={letterData}
-        customization={customization}
-        imageHeight={sceneHeight}
-      />
-
-      {/* Tracing label */}
-      <Text style={[styles.traceLabel, { color: letterData.accentColor }]}>
-        Trace the letter {isLowercase ? letter?.toLowerCase() : letter}!
-      </Text>
-
-      {/* Case toggle */}
-      <View style={styles.caseToggleRow}>
-        <TouchableOpacity
-          style={[styles.caseBtn, !isLowercase && { backgroundColor: letterData.accentColor }]}
-          onPress={() => switchCase(false)}
-        >
-          <Text style={[styles.caseBtnText, !isLowercase && styles.caseBtnTextActive]}>A</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.caseBtn, isLowercase && { backgroundColor: letterData.accentColor }]}
-          onPress={() => switchCase(true)}
-        >
-          <Text style={[styles.caseBtnText, isLowercase && styles.caseBtnTextActive]}>a</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Tracer */}
-      <View style={styles.tracerWrapper}>
-        <LetterTracer
-          key={tracerKey}
-          letter={isLowercase ? (letter?.toLowerCase() ?? 'a') : (letter ?? 'A')}
-          size={tracerSize}
-          accentColor={letterData.accentColor}
-          onComplete={handleComplete}
-          onProgress={handleProgress}
-          onTouchingChange={() => {}}
+      {/* Flex middle — scene + label + toggle + tracer; measured to drive sizes */}
+      <View style={styles.middle} onLayout={e => setMiddleH(e.nativeEvent.layout.height)}>
+        <SceneView
+          letterData={letterData}
+          customization={customization}
+          imageHeight={sceneHeight}
         />
+
+        {/* Tracing label */}
+        <Text style={[styles.traceLabel, { color: letterData.accentColor }]}>
+          Trace the letter {isLowercase ? letter?.toLowerCase() : letter}!
+        </Text>
+
+        {/* Case toggle */}
+        <View style={styles.caseToggleRow}>
+          <TouchableOpacity
+            style={[styles.caseBtn, !isLowercase && { backgroundColor: letterData.accentColor }]}
+            onPress={() => switchCase(false)}
+          >
+            <Text style={[styles.caseBtnText, !isLowercase && styles.caseBtnTextActive]}>A</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.caseBtn, isLowercase && { backgroundColor: letterData.accentColor }]}
+            onPress={() => switchCase(true)}
+          >
+            <Text style={[styles.caseBtnText, isLowercase && styles.caseBtnTextActive]}>a</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Tracer */}
+        <View style={styles.tracerWrapper}>
+          <LetterTracer
+            key={tracerKey}
+            letter={isLowercase ? (letter?.toLowerCase() ?? 'a') : (letter ?? 'A')}
+            size={tracerSize}
+            accentColor={letterData.accentColor}
+            onComplete={handleComplete}
+            onProgress={handleProgress}
+            onTouchingChange={() => {}}
+          />
+        </View>
       </View>
 
       {/* Progress bar */}
@@ -189,6 +180,7 @@ export default function LearnScreen() {
 
 const styles = StyleSheet.create({
   safe:   { flex: 1, backgroundColor: '#FFF9F0' },
+  middle: { flex: 1, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
