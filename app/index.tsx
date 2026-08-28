@@ -167,6 +167,7 @@ export default function HomeScreen() {
           <TouchableOpacity style={styles.setupBtn} onPress={openSetup}>
             <Text style={styles.setupBtnText}>⚙️ Parent Setup</Text>
           </TouchableOpacity>
+          <Text style={styles.versionText}>v1.3.0 (34)</Text>
         </View>
 
       </View>
@@ -245,7 +246,8 @@ const styles = StyleSheet.create({
   lockBadge: { position: 'absolute', bottom: 2, right: 2 },
   lockIcon:  { fontSize: 10 },
 
-  bottomRow: { alignItems: 'center', gap: 8, paddingBottom: 4 },
+  bottomRow:   { alignItems: 'center', gap: 8, paddingBottom: 4 },
+  versionText: { fontSize: 11, color: '#BDBDBD' },
   unlockBanner: {
     backgroundColor: '#FF6B35',
     paddingVertical: 10,
